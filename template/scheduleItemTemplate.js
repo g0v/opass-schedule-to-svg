@@ -1,9 +1,9 @@
+import { formatTime } from '../utils/formatTime.js'
+
 export const ROW_HEIGHT = 124
 
 export function scheduleItemTemplate(i, session, speakerList) {
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
-  const startDate = new Date(session.start)
-  const startTime = `${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`
 
   return {
     name: 'g',
@@ -61,7 +61,7 @@ export function scheduleItemTemplate(i, session, speakerList) {
           {
             name: '',
             type: 'text',
-            value: startTime,
+            value: formatTime(session.start),
             parent: null,
             attributes: {},
             children: []
