@@ -20,14 +20,13 @@ const dates = new Set()
 const rooms = new Set()
 
 schedule.sessions.forEach(session => {
-  const startDate = new Date(session.start)
-  dates.add(dateToString(startDate))
+  dates.add(dateToString(session.start))
   rooms.add(session.room)
 })
 
 const sessionGroup = {}
 schedule.sessions.forEach(session => {
-  const date = dateToString(new Date(session.start))
+  const date = dateToString(session.start)
   const room = session.room
   const groupName = `${date}-${room}`
 
