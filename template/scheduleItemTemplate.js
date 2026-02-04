@@ -1,4 +1,4 @@
-const HEIGHT = 124
+export const ROW_HEIGHT = 124
 
 export function scheduleItemTemplate(i, session, speakerList) {
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
@@ -21,9 +21,9 @@ export function scheduleItemTemplate(i, session, speakerList) {
         value: '',
         parent: null,
         attributes: {
-          y: HEIGHT * i,
+          y: ROW_HEIGHT * i,
           width: '1080',
-          height: HEIGHT,
+          height: ROW_HEIGHT,
           stroke: 'black',
           fill: '#ffffff'
         },
@@ -36,7 +36,7 @@ export function scheduleItemTemplate(i, session, speakerList) {
         parent: null,
         attributes: {
           x: '45.1',
-          y: HEIGHT * i,
+          y: ROW_HEIGHT * i,
           width: '101.3',
           height: '36.8',
           rx: '10',
@@ -52,7 +52,7 @@ export function scheduleItemTemplate(i, session, speakerList) {
         parent: null,
         attributes: {
           x: '95.75',
-          y: HEIGHT * i + 27,
+          y: ROW_HEIGHT * i + 27,
           class: 'time',
           'text-anchor': 'middle',
           style: 'font-family:&#x27;Onest-Regular_SemiBold&#x27;, &#x27;Onest&#x27;;font-size:24.1px'
@@ -75,7 +75,7 @@ export function scheduleItemTemplate(i, session, speakerList) {
         parent: null,
         attributes: {
           x: '342.1',
-          y: HEIGHT * i + 62,
+          y: ROW_HEIGHT * i + 62,
           class: 'title',
           style: 'font-family:&#x27;NotoSansTC-Regular&#x27;, &#x27;Noto Sans TC&#x27;, sans-serif;font-size:17.8px'
         },
@@ -97,7 +97,7 @@ export function scheduleItemTemplate(i, session, speakerList) {
         parent: null,
         attributes: {
           x: '342.1',
-          y: HEIGHT * i + 80,
+          y: ROW_HEIGHT * i + 80,
           class: 'title',
           style: 'font-family:&#x27;Onest-Regular_Regular&#x27;, &#x27;Onest&#x27;;font-size:13.3px'
         },
@@ -119,7 +119,7 @@ export function scheduleItemTemplate(i, session, speakerList) {
         parent: null,
         attributes: {
           x: '863.8',
-          y: Math.max(2, HEIGHT * i + (HEIGHT - 28 * speakers.length) / 2),
+          y: Math.max(2, ROW_HEIGHT * i + (ROW_HEIGHT - 28 * speakers.length) / 2),
           class: 'speaker'
         },
         children: speakers.map(speaker => ({
