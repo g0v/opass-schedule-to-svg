@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Opass Schedule to SVG</title>
+    <script src="//unpkg.com/alpinejs" defer></script>
+
+    <style>
+      :root {
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif,
+          'Apple Color Emoji',
+          'Segoe UI Emoji',
+          Segoe UI Symbol;
+        --background: #111111;
+        --primary: #c42026;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        color: white;
+      }
+
+      body {
+        background: var(--background);
+        padding: 1rem 0.5rem;
+        max-width: 1080px;
+        margin: 0 auto;
+      }
+
+      img {
+        max-width: 100%;
+      }
+
+      h1 {
+        margin-bottom: 1rem;
+        font-weight: 500;
+      }
+
+      button {
+        all: unset;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border: 2px solid var(--primary);
+        border-radius: 0.25rem;
+        background-color: transparent;
+        color: white;
+        transition: all 0.2s ease;
+      }
+
+      button:hover,
+      button.active {
+        background-color: var(--primary);
+      }
+
+      .btns {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .btns:not(:last-child) {
+        margin-bottom: 0.5rem;
+      }
+
+      .header {
+        display: flex;
+        margin-bottom: 0.5rem;
+      }
+
+      .header-left {
+        margin-right: auto;
+      }
+
+      .header-right {
+        align-self: flex-end;
+      }
+    </style>
+  </head>
+
+  <body x-data="schedule()">
+    <h1>Opass Schedule to SVG</h1>
+
+    <header class="header">
+      <div class="header-left">
+        <div class="btns">
+          <template x-for="date in dates">
+            <button x-text="date" @click="setDate(date)" :class="{ active: selectedDate === date}"></button>
+          </template>
+        </div>
+
+        <template x-if="selectedDate">
+          <div class="btns">
+            <template x-for="room in rooms">
+              <button x-text="room" @click="setRoom(room)" :class="{ active: selectedRoom === room}"></button>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <div class="header-right">
+        <template x-if="selectedDate && selectedRoom">
+          <button @click="download">Download</button>
+        </template>
+      </div>
+    </header>
+
+    <template x-if="selectedDate && selectedRoom">
+      <div>
+        <img :src="`./${selectedDate}-${selectedRoom}.svg`" />
+      </div>
+    </template>
+
+    <script>
+      document.addEventListener('alpine:init', () => {
+        Alpine.data('schedule', () => ({
+          dates: [],
+          rooms: [],
+          selectedDate: '',
+          selectedRoom: '',
+
+          async init() {
+            const [dates, rooms] = await Promise.all([fetch('./dates.json').then(res => res.json()), fetch('./rooms.json').then(res => res.json())])
+            console.log(dates)
+            this.dates = dates
+            this.rooms = rooms
+          },
+
+          setDate(date) {
+            this.selectedDate = date
+          },
+
+          setRoom(room) {
+            this.selectedRoom = room
+          },
+
+          download() {
+            if (!this.selectedDate || !this.selectedRoom) return
+
+            const url = `./${this.selectedDate}-${this.selectedRoom}.svg`
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${this.selectedDate}-${this.selectedRoom}.svg`
+            a.click()
+          }
+        }))
+      })
+    </script>
+  </body>
+</html>

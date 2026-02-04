@@ -55,5 +55,6 @@ tasks.push(fs.writeFile(path.resolve(outputDir, 'rooms.json'), JSON.stringify(Ar
 svgs.forEach(svg => {
   tasks.push(fs.writeFile(path.resolve(outputDir, svg.name), svg.content))
 })
+tasks.push(fs.copyFile(path.resolve('./index.html'), path.resolve(outputDir, 'index.html')))
 await Promise.all(tasks)
 console.log('Done!')
