@@ -1,0 +1,17 @@
+{
+  "name": "opass-schedule-to-svg",
+  "version": "1.0.0",
+  "author": "Terry",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "spreadsheet-to-json": "^2.0.0",
+    "svgson": "^5.3.1"
+  }
+}
