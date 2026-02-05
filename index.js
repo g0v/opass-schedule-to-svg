@@ -8,53 +8,67 @@ import { scheduleTemplate } from './template/scheduleTemplate.js'
 
 const outputDir = path.resolve('./dist')
 
-const scheduleStr = await generateSchedule({
+const scheduleJsonStr = await generateSchedule({
   spreadsheetKey: process.env.SPREADSHEET_KEY,
   gcp_api_key: process.env.GCP_API_KEY,
   default_avatar: process.env.DEFAULT_AVATAR,
   avatar_base_url: process.env.AVATAR_BASE_URL
 })
-
-const schedule = JSON.parse(scheduleStr)
-const dates = new Set()
-const rooms = new Set()
-
-schedule.sessions.forEach(session => {
-  dates.add(formatDate(session.start))
-  rooms.add(session.room)
-})
-
-const sessionGroup = {}
-schedule.sessions.forEach(session => {
-  const date = formatDate(session.start)
-  const room = session.room
-  const groupName = `${date}-${room}`
-
-  if (!Object.hasOwn(sessionGroup, groupName)) {
-    sessionGroup[groupName] = []
-  }
-
-  sessionGroup[groupName].push(session)
-})
-
-const svgs = []
-for (const groupName in sessionGroup) {
-  sessionGroup[groupName].sort((a, b) => new Date(a.start) - new Date(b.start))
-  const svgJson = scheduleTemplate(schedule, sessionGroup[groupName])
-  svgs.push({
-    name: `${groupName}.svg`,
-    content: stringify(svgJson)
-  })
-}
+const schedule = JSON.parse(scheduleJsonStr)
+const [dates, rooms] = getDatesAndRooms(schedule)
+const sessionGroups = getSessionGroups(schedule)
+const svgs = getSvgs(schedule, sessionGroups)
 
 await fs.mkdir(outputDir, { recursive: true })
 const tasks = []
-tasks.push(fs.writeFile(path.resolve(outputDir, 'schedule.json'), scheduleStr))
-tasks.push(fs.writeFile(path.resolve(outputDir, 'dates.json'), JSON.stringify(Array.from(dates))))
-tasks.push(fs.writeFile(path.resolve(outputDir, 'rooms.json'), JSON.stringify(Array.from(rooms))))
+tasks.push(fs.writeFile(path.resolve(outputDir, 'schedule.json'), scheduleJsonStr))
+tasks.push(fs.writeFile(path.resolve(outputDir, 'dates.json'), dates))
+tasks.push(fs.writeFile(path.resolve(outputDir, 'rooms.json'), rooms))
 svgs.forEach(svg => {
   tasks.push(fs.writeFile(path.resolve(outputDir, svg.name), svg.content))
 })
 tasks.push(fs.copyFile(path.resolve('./index.html'), path.resolve(outputDir, 'index.html')))
 await Promise.all(tasks)
+
 console.log('Done!')
+
+function getDatesAndRooms(schedule) {
+  const dates = new Set()
+  const rooms = new Set()
+
+  schedule.sessions.forEach(session => {
+    dates.add(formatDate(session.start))
+    rooms.add(session.room)
+  })
+
+  return [Array.from(dates), Array.from(rooms)]
+}
+
+function getSessionGroups(schedule) {
+  const groups = {}
+  schedule.sessions.forEach(session => {
+    const date = formatDate(session.start)
+    const room = session.room
+    const name = `${date}-${room}`
+
+    if (!Object.hasOwn(groups, name)) {
+      groups[name] = []
+    }
+
+    groups[name].push(session)
+  })
+  return groups
+}
+
+function getSvgs(schedule, sessionGroups) {
+  const svgs = []
+  for (const groupName in sessionGroups) {
+    sessionGroups[groupName].sort((a, b) => new Date(a.start) - new Date(b.start))
+    const svgJson = scheduleTemplate(schedule, sessionGroups[groupName])
+    svgs.push({
+      name: `${groupName}.svg`,
+      content: stringify(svgJson)
+    })
+  }
+  return svgs
+}
