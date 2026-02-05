@@ -1,7 +1,7 @@
 /**
  * @param {Date|string} date
  */
-export function dateToString(date) {
+export function formatDate(date) {
   if (typeof date === 'string') {
     date = new Date(date)
   }

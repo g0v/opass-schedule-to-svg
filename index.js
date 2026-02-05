@@ -2,7 +2,7 @@ import 'dotenv/config'
 import fs from 'fs/promises'
 import path from 'path'
 import { stringify } from 'svgson'
-import { dateToString } from './utils/dateToString.js'
+import { formatDate } from './utils/formatDate.js'
 import generateSchedule from './lib/schedule-json-generator/generateSchedule.js'
 import { scheduleTemplate } from './template/scheduleTemplate.js'
 
@@ -20,13 +20,13 @@ const dates = new Set()
 const rooms = new Set()
 
 schedule.sessions.forEach(session => {
-  dates.add(dateToString(session.start))
+  dates.add(formatDate(session.start))
   rooms.add(session.room)
 })
 
 const sessionGroup = {}
 schedule.sessions.forEach(session => {
-  const date = dateToString(session.start)
+  const date = formatDate(session.start)
   const room = session.room
   const groupName = `${date}-${room}`
 
