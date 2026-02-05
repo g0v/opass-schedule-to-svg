@@ -5,8 +5,16 @@ export function formatDate(date) {
   if (typeof date === 'string') {
     date = new Date(date)
   }
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
+
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date)
+  const y = parts.find(p => p.type === 'year').value
+  const m = parts.find(p => p.type === 'month').value
+  const d = parts.find(p => p.type === 'day').value
+
   return `${y}-${m}-${d}`
 }
