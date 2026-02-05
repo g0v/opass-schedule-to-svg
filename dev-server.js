@@ -11,6 +11,27 @@ const MIME = {
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml'
 }
+const distDir = path.join(__dirname, 'dist')
+
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host}`)
+  const pathname = decodeURIComponent(url.pathname)
+
+  if (pathname === '/') {
+    return sendFile(res, path.join(__dirname, 'index.html'))
+  }
+
+  const safePath = path.resolve(distDir, `.${pathname}`)
+  if (!safePath.startsWith(distDir + path.sep)) {
+    return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain; charset=utf-8' })
+  }
+
+  return sendFile(res, safePath)
+})
+
+server.listen(3000, () => {
+  console.log('Server running at http://localhost:3000/')
+})
 
 function send(res, status, body, header = {}) {
   res.writeHead(status, header)
@@ -33,25 +54,3 @@ async function sendFile(res, filePath) {
     }
   }
 }
-
-const distDir = path.join(__dirname, 'dist')
-
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`)
-  const pathname = decodeURIComponent(url.pathname)
-
-  if (pathname === '/') {
-    return sendFile(res, path.join(__dirname, 'index.html'))
-  }
-
-  const safePath = path.resolve(distDir, `.${pathname}`)
-  if (!safePath.startsWith(distDir + path.sep)) {
-    return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain; charset=utf-8' })
-  }
-
-  return sendFile(res, safePath)
-})
-
-server.listen(3000, () => {
-  console.log('Server running at http://localhost:3000/')
-})
