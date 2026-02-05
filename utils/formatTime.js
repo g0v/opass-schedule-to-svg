@@ -6,10 +6,14 @@ export function formatTime(date) {
     date = new Date(date)
   }
 
-  return new Intl.DateTimeFormat('en-GB', {
+  const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Taipei',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false
-  }).format(date)
+  }).formatToParts(date)
+  const h = parts.find(p => p.type === 'hour').value
+  const m = parts.find(p => p.type === 'minute').value
+
+  return `${h}:${m}`
 }
