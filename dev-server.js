@@ -34,6 +34,8 @@ async function sendFile(res, filePath) {
   }
 }
 
+const distDir = path.join(__dirname, 'dist')
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`)
   const pathname = decodeURIComponent(url.pathname)
@@ -42,7 +44,12 @@ const server = http.createServer(async (req, res) => {
     return sendFile(res, path.join(__dirname, 'index.html'))
   }
 
-  return sendFile(res, path.join(__dirname, 'dist', pathname))
+  const safePath = path.resolve(distDir, `.${pathname}`)
+  if (!safePath.startsWith(distDir + path.sep)) {
+    return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain; charset=utf-8' })
+  }
+
+  return sendFile(res, safePath)
 })
 
 server.listen(3000, () => {
