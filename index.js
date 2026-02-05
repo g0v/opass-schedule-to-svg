@@ -22,8 +22,8 @@ const svgs = getSvgs(schedule, sessionGroups)
 await fs.mkdir(outputDir, { recursive: true })
 const tasks = []
 tasks.push(fs.writeFile(path.resolve(outputDir, 'schedule.json'), scheduleJsonStr))
-tasks.push(fs.writeFile(path.resolve(outputDir, 'dates.json'), dates))
-tasks.push(fs.writeFile(path.resolve(outputDir, 'rooms.json'), rooms))
+tasks.push(fs.writeFile(path.resolve(outputDir, 'dates.json'), JSON.stringify(dates)))
+tasks.push(fs.writeFile(path.resolve(outputDir, 'rooms.json'), JSON.stringify(rooms)))
 svgs.forEach(svg => {
   tasks.push(fs.writeFile(path.resolve(outputDir, svg.name), svg.content))
 })
