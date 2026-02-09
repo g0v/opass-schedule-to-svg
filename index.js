@@ -45,6 +45,14 @@ svgs.forEach(svg => {
 tasks.push(fs.copyFile(path.resolve('./index.html'), path.resolve(outputDir, 'index.html')))
 tasks.push(fs.copyFile(path.resolve('./playground.html'), path.resolve(outputDir, 'playground.html')))
 tasks.push(fs.copyFile(path.resolve('./style.config.json'), path.resolve(outputDir, 'style.config.json')))
+
+// Copy template folder
+const templateOutputDir = path.resolve(outputDir, 'template')
+tasks.push(fs.mkdir(templateOutputDir, { recursive: true }).then(() => Promise.all([
+  fs.copyFile(path.resolve('./template/scheduleTemplate.js'), path.resolve(templateOutputDir, 'scheduleTemplate.js')),
+  fs.copyFile(path.resolve('./template/scheduleItemTemplate.js'), path.resolve(templateOutputDir, 'scheduleItemTemplate.js'))
+])))
+
 await Promise.all(tasks)
 
 console.log('Done!')
