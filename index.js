@@ -8,12 +8,21 @@ import { scheduleTemplate } from './template/scheduleTemplate.js'
 
 const outputDir = path.resolve('./dist')
 
-const scheduleJsonStr = await generateSchedule({
-  spreadsheetKey: process.env.SPREADSHEET_KEY,
-  gcp_api_key: process.env.GCP_API_KEY,
-  default_avatar: process.env.DEFAULT_AVATAR,
-  avatar_base_url: process.env.AVATAR_BASE_URL
-})
+let scheduleJsonStr
+
+if (process.env.GCP_API_KEY && process.env.SPREADSHEET_KEY) {
+  scheduleJsonStr = await generateSchedule({
+    spreadsheetKey: process.env.SPREADSHEET_KEY,
+    gcp_api_key: process.env.GCP_API_KEY,
+    default_avatar: process.env.DEFAULT_AVATAR,
+    avatar_base_url: process.env.AVATAR_BASE_URL
+  })
+} else {
+  console.log('⚠️  Missing GCP_API_KEY or SPREADSHEET_KEY. Fetching production data for local testing...')
+  const res = await fetch('https://g0v.github.io/opass-schedule-to-svg/schedule.json')
+  if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`)
+  scheduleJsonStr = await res.text()
+}
 const schedule = JSON.parse(scheduleJsonStr)
 const [dates, rooms] = getDatesAndRooms(schedule)
 const sessionGroups = getSessionGroups(schedule)
