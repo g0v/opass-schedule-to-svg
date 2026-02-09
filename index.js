@@ -44,6 +44,7 @@ svgs.forEach(svg => {
 })
 tasks.push(fs.copyFile(path.resolve('./index.html'), path.resolve(outputDir, 'index.html')))
 tasks.push(fs.copyFile(path.resolve('./playground.html'), path.resolve(outputDir, 'playground.html')))
+tasks.push(fs.copyFile(path.resolve('./style.config.json'), path.resolve(outputDir, 'style.config.json')))
 await Promise.all(tasks)
 
 console.log('Done!')
