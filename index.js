@@ -53,6 +53,13 @@ tasks.push(fs.mkdir(templateOutputDir, { recursive: true }).then(() => Promise.a
   fs.copyFile(path.resolve('./template/scheduleItemTemplate.js'), path.resolve(templateOutputDir, 'scheduleItemTemplate.js'))
 ])))
 
+// Copy utils folder
+const utilsOutputDir = path.resolve(outputDir, 'utils')
+tasks.push(fs.mkdir(utilsOutputDir, { recursive: true }).then(() => Promise.all([
+  fs.copyFile(path.resolve('./utils/formatDate.js'), path.resolve(utilsOutputDir, 'formatDate.js')),
+  fs.copyFile(path.resolve('./utils/formatTime.js'), path.resolve(utilsOutputDir, 'formatTime.js'))
+])))
+
 await Promise.all(tasks)
 
 console.log('Done!')
