@@ -20,9 +20,14 @@ if (process.env.GCP_API_KEY && process.env.SPREADSHEET_KEY) {
   })
 } else {
   console.log('⚠️  Missing GCP_API_KEY or SPREADSHEET_KEY. Fetching production data for local testing...')
-  const res = await fetch('https://g0v.github.io/opass-schedule-to-svg/schedule.json')
-  if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`)
-  scheduleJsonStr = await res.text()
+  const https = await import('https')
+  scheduleJsonStr = await new Promise((resolve, reject) => {
+    https.get('https://g0v.github.io/opass-schedule-to-svg/schedule.json', (res) => {
+      let data = ''
+      res.on('data', (chunk) => data += chunk)
+      res.on('end', () => resolve(data))
+    }).on('error', reject)
+  })
 }
 const schedule = JSON.parse(scheduleJsonStr)
 const [dates, rooms] = getDatesAndRooms(schedule)
@@ -38,6 +43,7 @@ svgs.forEach(svg => {
   tasks.push(fs.writeFile(path.resolve(outputDir, svg.name), svg.content))
 })
 tasks.push(fs.copyFile(path.resolve('./index.html'), path.resolve(outputDir, 'index.html')))
+tasks.push(fs.copyFile(path.resolve('./playground.html'), path.resolve(outputDir, 'playground.html')))
 await Promise.all(tasks)
 
 console.log('Done!')
@@ -61,7 +67,7 @@ function getSessionGroups(schedule) {
     const room = session.room
     const name = `${date}-${room}`
 
-    if (!Object.hasOwn(groups, name)) {
+    if (!groups[name]) {
       groups[name] = []
     }
 

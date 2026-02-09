@@ -2,11 +2,11 @@
     "rowHeight": 124,
     "svgWidth": 1080,
     "svgPreserveAspectRatio": "xMidYMid meet",
-    "css": "\n            text { font-family: Arial, sans-serif; }\n            .time { fill: #ffffff; }\n            .title { fill: #000000; }\n            .speaker { fill: #000000; }\n          ",
+    "css": "",
     "sessionBlock": {
         "background": {
             "fill": "#ffffff",
-            "stroke": "black"
+            "stroke": "#000000"
         },
         "timeBadge": {
             "x": "45.1",
@@ -18,24 +18,25 @@
         },
         "timeText": {
             "x": "95.75",
-            "yOffset": 27,
-            "style": "font-family:&#x27;Onest-Regular_SemiBold&#x27;, &#x27;Onest&#x27;;font-size:24.1px"
+            "yOffset": 0,
+            "style": "font-family:'Onest-Regular_SemiBold', 'Onest-Regular_Regular', 'Onest', sans-serif;font-weight:600;font-size:24.1px;fill:#ffffff"
         },
         "titleZh": {
             "x": "342.1",
             "yOffset": 62,
-            "style": "font-family:&#x27;NotoSansTC-Regular&#x27;, &#x27;Noto Sans TC&#x27;, sans-serif;font-size:17.8px"
+            "style": "font-family:'NotoSansTC-Regular', 'Noto Sans TC', sans-serif;font-weight:400;font-size:17.8px;fill:#000000"
         },
         "titleEn": {
             "x": "342.1",
             "yOffset": 80,
-            "style": "font-family:&#x27;Onest-Regular_Regular&#x27;, &#x27;Onest&#x27;;font-size:13.3px"
+            "style": "font-family:'Onest-Regular_SemiBold', 'Onest-Regular_Regular', 'Onest', sans-serif;font-weight:400;font-size:13.3px;fill:#000000"
         },
         "speaker": {
             "x": "863.8",
             "lineHeight": 28,
             "dy": "24",
-            "yPadding": 2
+            "yPadding": 2,
+            "style": "font-family:'NotoSansTC-Regular', 'Noto Sans TC', sans-serif;font-weight:400;font-size:14px;fill:#000000"
         }
     }
 }
