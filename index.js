@@ -5,6 +5,7 @@ import { stringify } from 'svgson'
 import { formatDate } from './utils/formatDate.js'
 import generateSchedule from './lib/schedule-json-generator/generateSchedule.js'
 import { scheduleTemplate } from './template/scheduleTemplate.js'
+const styleConfig = JSON.parse(await fs.readFile(new URL('./style.config.json', import.meta.url)))
 
 const outputDir = path.resolve('./dist')
 
@@ -73,7 +74,7 @@ function getSvgs(schedule, sessionGroups) {
   const svgs = []
   for (const groupName in sessionGroups) {
     sessionGroups[groupName].sort((a, b) => new Date(a.start) - new Date(b.start))
-    const svgJson = scheduleTemplate(schedule, sessionGroups[groupName])
+    const svgJson = scheduleTemplate(schedule, sessionGroups[groupName], styleConfig)
     svgs.push({
       name: `${groupName}.svg`,
       content: stringify(svgJson)
