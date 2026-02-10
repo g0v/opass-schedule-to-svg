@@ -17,5 +17,8 @@
     "dotenv": "^17.2.3",
     "spreadsheet-to-json": "^2.0.0",
     "svgson": "^5.3.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
   }
 }
