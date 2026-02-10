@@ -5,6 +5,9 @@
   "description": "",
   "type": "module",
   "main": "index.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "node dev-server.js",
     "build": "node index.js"

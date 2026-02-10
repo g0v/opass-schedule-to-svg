@@ -1,9 +1,8 @@
 import { formatTime } from '../utils/formatTime.js'
 
-export const ROW_HEIGHT = 124
-
-export function scheduleItemTemplate(i, session, speakerList) {
+export function scheduleItemTemplate(i, session, speakerList, config) {
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
+  const { rowHeight, svgWidth, sessionBlock } = config
 
   return {
     name: 'g',
@@ -11,7 +10,7 @@ export function scheduleItemTemplate(i, session, speakerList) {
     value: '',
     parent: null,
     attributes: {
-      width: '1080',
+      width: svgWidth,
       height: 'sessionHeight'
     },
     children: [
@@ -21,41 +20,54 @@ export function scheduleItemTemplate(i, session, speakerList) {
         value: '',
         parent: null,
         attributes: {
-          y: ROW_HEIGHT * i,
-          width: '1080',
-          height: ROW_HEIGHT,
-          stroke: 'black',
-          fill: '#ffffff'
+          y: rowHeight * i,
+          width: svgWidth,
+          height: rowHeight,
+          stroke: sessionBlock.background.stroke,
+          fill: sessionBlock.background.fill
         },
         children: []
       },
-      {
+      ...(sessionBlock.timeBadge.show !== false ? [{
         name: 'rect',
         type: 'element',
         value: '',
         parent: null,
         attributes: {
-          x: '45.1',
-          y: ROW_HEIGHT * i,
-          width: '101.3',
-          height: '36.8',
-          rx: '10',
-          ry: '10',
-          fill: '#8DA4BE'
+          x: sessionBlock.timeBadge.x,
+          y: rowHeight * i + (rowHeight - sessionBlock.timeBadge.height) / 2,
+          width: sessionBlock.timeBadge.width,
+          height: sessionBlock.timeBadge.height,
+          rx: sessionBlock.timeBadge.rx,
+          ry: sessionBlock.timeBadge.ry,
+          fill: sessionBlock.timeBadge.fill
         },
         children: []
-      },
+      }] : []),
       {
         name: 'text',
         type: 'element',
         value: '',
         parent: null,
         attributes: {
-          x: '95.75',
-          y: ROW_HEIGHT * i + 27,
+          x: sessionBlock.timeBadge.show !== false
+            ? parseFloat(sessionBlock.timeBadge.x) + parseFloat(sessionBlock.timeBadge.width) / 2
+            : sessionBlock.timeText.x,
+          y: (() => {
+            const centerY = sessionBlock.timeBadge.show !== false
+              ? (rowHeight * i + (rowHeight - parseFloat(sessionBlock.timeBadge.height)) / 2) + parseFloat(sessionBlock.timeBadge.height) / 2
+              : rowHeight * i + rowHeight / 2;
+
+            // Try to extract font-size to calculate baseline offset (approx 0.35-0.4em)
+            const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/);
+            const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24;
+            const baselineOffset = fontSize * 0.35;
+
+            return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0);
+          })(),
           class: 'time',
           'text-anchor': 'middle',
-          style: 'font-family:&#x27;Onest-Regular_SemiBold&#x27;, &#x27;Onest&#x27;;font-size:24.1px'
+          style: sessionBlock.timeText.style
         },
         children: [
           {
@@ -74,10 +86,10 @@ export function scheduleItemTemplate(i, session, speakerList) {
         value: '',
         parent: null,
         attributes: {
-          x: '342.1',
-          y: ROW_HEIGHT * i + 62,
+          x: sessionBlock.titleZh.x,
+          y: rowHeight * i + (sessionBlock.titleZh.yOffset || 0),
           class: 'title',
-          style: 'font-family:&#x27;NotoSansTC-Regular&#x27;, &#x27;Noto Sans TC&#x27;, sans-serif;font-size:17.8px'
+          style: sessionBlock.titleZh.style
         },
         children: [
           {
@@ -96,10 +108,10 @@ export function scheduleItemTemplate(i, session, speakerList) {
         value: '',
         parent: null,
         attributes: {
-          x: '342.1',
-          y: ROW_HEIGHT * i + 80,
+          x: sessionBlock.titleEn.x,
+          y: rowHeight * i + (sessionBlock.titleEn.yOffset || 0),
           class: 'title',
-          style: 'font-family:&#x27;Onest-Regular_Regular&#x27;, &#x27;Onest&#x27;;font-size:13.3px'
+          style: sessionBlock.titleEn.style
         },
         children: [
           {
@@ -118,9 +130,13 @@ export function scheduleItemTemplate(i, session, speakerList) {
         value: '',
         parent: null,
         attributes: {
-          x: '863.8',
-          y: Math.max(2, ROW_HEIGHT * i + (ROW_HEIGHT - 28 * speakers.length) / 2),
-          class: 'speaker'
+          x: sessionBlock.speaker.x,
+          y: Math.max(
+            sessionBlock.speaker.yPadding,
+            rowHeight * i + (rowHeight - sessionBlock.speaker.lineHeight * speakers.length) / 2
+          ),
+          class: 'speaker',
+          style: sessionBlock.speaker.style || ''
         },
         children: speakers.map(speaker => ({
           name: 'tspan',
@@ -128,8 +144,8 @@ export function scheduleItemTemplate(i, session, speakerList) {
           value: '',
           parent: null,
           attributes: {
-            x: '863.8',
-            dy: '24'
+            x: sessionBlock.speaker.x,
+            dy: sessionBlock.speaker.dy
           },
           children: [
             {

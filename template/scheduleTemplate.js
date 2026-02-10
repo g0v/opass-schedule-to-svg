@@ -1,7 +1,8 @@
-import { scheduleItemTemplate, ROW_HEIGHT } from './scheduleItemTemplate.js'
+import { scheduleItemTemplate } from './scheduleItemTemplate.js'
 
-export function scheduleTemplate(schedule, sessions) {
-  const items = sessions.map((session, i) => scheduleItemTemplate(i, session, schedule.speakers))
+export function scheduleTemplate(schedule, sessions, config) {
+  const { rowHeight, svgWidth, svgPreserveAspectRatio, css } = config
+  const items = sessions.map((session, i) => scheduleItemTemplate(i, session, schedule.speakers, config))
 
   return {
     name: 'svg',
@@ -10,10 +11,10 @@ export function scheduleTemplate(schedule, sessions) {
     parent: null,
     attributes: {
       xmlns: 'http://www.w3.org/2000/svg',
-      width: '1080',
-      height: ROW_HEIGHT * items.length,
-      viewBox: `0 0 1080 ${ROW_HEIGHT * items.length}`,
-      preserveAspectRatio: 'xMidYMid meet'
+      width: svgWidth,
+      height: rowHeight * items.length,
+      viewBox: `0 0 ${svgWidth} ${rowHeight * items.length}`,
+      preserveAspectRatio: svgPreserveAspectRatio
     },
     children: [
       {
@@ -26,8 +27,7 @@ export function scheduleTemplate(schedule, sessions) {
           {
             name: '',
             type: 'text',
-            value:
-              '\n            text { font-family: Arial, sans-serif; }\n            .time { fill: #ffffff; }\n            .title { fill: #000000; }\n            .speaker { fill: #000000; }\n          ',
+            value: css,
             parent: null,
             attributes: {},
             children: []

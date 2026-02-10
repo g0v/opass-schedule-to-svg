@@ -9,7 +9,8 @@ const __dirname = path.dirname(__filename)
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml'
+  '.svg': 'image/svg+xml',
+  '.js': 'text/javascript; charset=utf-8'
 }
 const distDir = path.join(__dirname, 'dist')
 
@@ -21,6 +22,17 @@ const server = http.createServer(async (req, res) => {
     return sendFile(res, path.join(__dirname, 'index.html'))
   }
 
+  // Serve development files from root
+  if (
+    pathname === '/playground.html' ||
+    pathname === '/style.config.json' ||
+    pathname.startsWith('/template/') ||
+    pathname.startsWith('/utils/')
+  ) {
+    return sendFile(res, path.join(__dirname, pathname))
+  }
+
+  // Serve generated assets from dist
   const safePath = path.resolve(distDir, `.${pathname}`)
   if (!safePath.startsWith(distDir + path.sep)) {
     return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain; charset=utf-8' })
