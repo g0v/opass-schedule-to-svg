@@ -107,9 +107,11 @@
     </div>
 
     <div class="header-right" style="display: flex; gap: 0.5rem; align-items: flex-end;">
-      <a href="./playground.html" style="text-decoration: none;">
-        <button type="button">Playground</button>
-      </a>
+      <template x-if="selectedDate && selectedRoom">
+        <a href="./playground.html" style="text-decoration: none;">
+          <button type="button">Playground</button>
+        </a>
+      </template>
       <template x-if="selectedDate && selectedRoom">
         <button @click="download">Download</button>
       </template>
