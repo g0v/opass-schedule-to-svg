@@ -2,7 +2,7 @@
 
 將 OPass 格式的 Google Sheets 議程表轉換為高品質的 SVG 圖片。支援自訂樣式配置與即時預覽功能。
 
-[線上預覽](https://github.com/g0v/opass-schedule-to-svg)
+[線上預覽](https://g0v.github.io/opass-schedule-to-svg/)
 
 ## 功能特色
 
