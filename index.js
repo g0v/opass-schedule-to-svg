@@ -15,7 +15,7 @@ if (process.env.GCP_API_KEY && process.env.SPREADSHEET_KEY) {
     spreadsheetKey: process.env.SPREADSHEET_KEY,
     gcp_api_key: process.env.GCP_API_KEY,
     default_avatar: process.env.DEFAULT_AVATAR,
-    avatar_base_url: process.env.AVATAR_BASE_URL
+    avatar_base_url: process.env.AVATAR_BASE_URL,
   })
 } else {
   console.warn('⚠️  Missing GCP_API_KEY or SPREADSHEET_KEY. Fetching production data for local testing...')
@@ -48,9 +48,9 @@ tasks.push(
     .then(() =>
       Promise.all([
         fs.copyFile(path.resolve('./template/scheduleTemplate.js'), path.resolve(templateOutputDir, 'scheduleTemplate.js')),
-        fs.copyFile(path.resolve('./template/scheduleItemTemplate.js'), path.resolve(templateOutputDir, 'scheduleItemTemplate.js'))
-      ])
-    )
+        fs.copyFile(path.resolve('./template/scheduleItemTemplate.js'), path.resolve(templateOutputDir, 'scheduleItemTemplate.js')),
+      ]),
+    ),
 )
 
 // Copy utils folder
@@ -61,9 +61,9 @@ tasks.push(
     .then(() =>
       Promise.all([
         fs.copyFile(path.resolve('./utils/formatDate.js'), path.resolve(utilsOutputDir, 'formatDate.js')),
-        fs.copyFile(path.resolve('./utils/formatTime.js'), path.resolve(utilsOutputDir, 'formatTime.js'))
-      ])
-    )
+        fs.copyFile(path.resolve('./utils/formatTime.js'), path.resolve(utilsOutputDir, 'formatTime.js')),
+      ]),
+    ),
 )
 
 await Promise.all(tasks)
@@ -106,7 +106,7 @@ async function getSvgs(schedule, sessionGroups) {
     const svgJson = scheduleTemplate(schedule, sessionGroups[groupName], styleConfig)
     svgs.push({
       name: `${groupName}.svg`,
-      content: stringify(svgJson)
+      content: stringify(svgJson),
     })
   }
   return svgs

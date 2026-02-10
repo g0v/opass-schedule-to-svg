@@ -14,7 +14,7 @@ export function scheduleTemplate(schedule, sessions, config) {
       width: svgWidth,
       height: rowHeight * items.length,
       viewBox: `0 0 ${svgWidth} ${rowHeight * items.length}`,
-      preserveAspectRatio: svgPreserveAspectRatio
+      preserveAspectRatio: svgPreserveAspectRatio,
     },
     children: [
       {
@@ -30,11 +30,11 @@ export function scheduleTemplate(schedule, sessions, config) {
             value: css,
             parent: null,
             attributes: {},
-            children: []
-          }
-        ]
+            children: [],
+          },
+        ],
       },
-      ...items
-    ]
+      ...items,
+    ],
   }
 }

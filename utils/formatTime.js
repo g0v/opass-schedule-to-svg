@@ -10,7 +10,7 @@ export function formatTime(date) {
     timeZone: 'Asia/Taipei',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: false,
   }).formatToParts(date)
   const h = parts.find(p => p.type === 'hour').value
   const m = parts.find(p => p.type === 'minute').value

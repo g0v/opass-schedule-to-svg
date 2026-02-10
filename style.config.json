@@ -1,42 +1,42 @@
 {
-    "rowHeight": 124,
-    "svgWidth": 1080,
-    "svgPreserveAspectRatio": "xMidYMid meet",
-    "css": "",
-    "sessionBlock": {
-        "background": {
-            "fill": "#ffffff",
-            "stroke": "#000000"
-        },
-        "timeBadge": {
-            "x": "45.1",
-            "width": "101.3",
-            "height": "36.8",
-            "rx": "10",
-            "ry": "10",
-            "fill": "#8DA4BE"
-        },
-        "timeText": {
-            "x": "95.75",
-            "yOffset": 0,
-            "style": "font-family:'Onest-Regular_SemiBold', 'Onest-Regular_Regular', 'Onest', sans-serif;font-weight:600;font-size:24.1px;fill:#ffffff"
-        },
-        "titleZh": {
-            "x": "342.1",
-            "yOffset": 62,
-            "style": "font-family:'NotoSansTC-Regular', 'Noto Sans TC', sans-serif;font-weight:400;font-size:17.8px;fill:#000000"
-        },
-        "titleEn": {
-            "x": "342.1",
-            "yOffset": 80,
-            "style": "font-family:'Onest-Regular_SemiBold', 'Onest-Regular_Regular', 'Onest', sans-serif;font-weight:400;font-size:13.3px;fill:#000000"
-        },
-        "speaker": {
-            "x": "863.8",
-            "lineHeight": 28,
-            "dy": "24",
-            "yPadding": 2,
-            "style": "font-family:'NotoSansTC-Regular', 'Noto Sans TC', sans-serif;font-weight:400;font-size:14px;fill:#000000"
-        }
+  "rowHeight": 124,
+  "svgWidth": 1080,
+  "svgPreserveAspectRatio": "xMidYMid meet",
+  "css": "",
+  "sessionBlock": {
+    "background": {
+      "fill": "#ffffff",
+      "stroke": "#000000"
+    },
+    "timeBadge": {
+      "x": "45.1",
+      "width": "101.3",
+      "height": "36.8",
+      "rx": "10",
+      "ry": "10",
+      "fill": "#8DA4BE"
+    },
+    "timeText": {
+      "x": "95.75",
+      "yOffset": 0,
+      "style": "font-family:'Onest-Regular_SemiBold', 'Onest-Regular_Regular', 'Onest', sans-serif;font-weight:600;font-size:24.1px;fill:#ffffff"
+    },
+    "titleZh": {
+      "x": "342.1",
+      "yOffset": 62,
+      "style": "font-family:'NotoSansTC-Regular', 'Noto Sans TC', sans-serif;font-weight:400;font-size:17.8px;fill:#000000"
+    },
+    "titleEn": {
+      "x": "342.1",
+      "yOffset": 80,
+      "style": "font-family:'Onest-Regular_SemiBold', 'Onest-Regular_Regular', 'Onest', sans-serif;font-weight:400;font-size:13.3px;fill:#000000"
+    },
+    "speaker": {
+      "x": "863.8",
+      "lineHeight": 28,
+      "dy": "24",
+      "yPadding": 2,
+      "style": "font-family:'NotoSansTC-Regular', 'Noto Sans TC', sans-serif;font-weight:400;font-size:14px;fill:#000000"
     }
+  }
 }

@@ -10,7 +10,7 @@ const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
-  '.js': 'text/javascript; charset=utf-8'
+  '.js': 'text/javascript; charset=utf-8',
 }
 const distDir = path.join(__dirname, 'dist')
 
@@ -23,12 +23,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Serve development files from root
-  if (
-    pathname === '/playground.html' ||
-    pathname === '/style.config.json' ||
-    pathname.startsWith('/template/') ||
-    pathname.startsWith('/utils/')
-  ) {
+  if (pathname === '/playground.html' || pathname === '/style.config.json' || pathname.startsWith('/template/') || pathname.startsWith('/utils/')) {
     return sendFile(res, path.join(__dirname, pathname))
   }
 

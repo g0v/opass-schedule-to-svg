@@ -11,7 +11,7 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
     parent: null,
     attributes: {
       width: svgWidth,
-      height: 'sessionHeight'
+      height: 'sessionHeight',
     },
     children: [
       {
@@ -24,50 +24,53 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
           width: svgWidth,
           height: rowHeight,
           stroke: sessionBlock.background.stroke,
-          fill: sessionBlock.background.fill
+          fill: sessionBlock.background.fill,
         },
-        children: []
+        children: [],
       },
-      ...(sessionBlock.timeBadge.show !== false ? [{
-        name: 'rect',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {
-          x: sessionBlock.timeBadge.x,
-          y: rowHeight * i + (rowHeight - sessionBlock.timeBadge.height) / 2,
-          width: sessionBlock.timeBadge.width,
-          height: sessionBlock.timeBadge.height,
-          rx: sessionBlock.timeBadge.rx,
-          ry: sessionBlock.timeBadge.ry,
-          fill: sessionBlock.timeBadge.fill
-        },
-        children: []
-      }] : []),
+      ...(sessionBlock.timeBadge.show !== false
+        ? [
+            {
+              name: 'rect',
+              type: 'element',
+              value: '',
+              parent: null,
+              attributes: {
+                x: sessionBlock.timeBadge.x,
+                y: rowHeight * i + (rowHeight - sessionBlock.timeBadge.height) / 2,
+                width: sessionBlock.timeBadge.width,
+                height: sessionBlock.timeBadge.height,
+                rx: sessionBlock.timeBadge.rx,
+                ry: sessionBlock.timeBadge.ry,
+                fill: sessionBlock.timeBadge.fill,
+              },
+              children: [],
+            },
+          ]
+        : []),
       {
         name: 'text',
         type: 'element',
         value: '',
         parent: null,
         attributes: {
-          x: sessionBlock.timeBadge.show !== false
-            ? parseFloat(sessionBlock.timeBadge.x) + parseFloat(sessionBlock.timeBadge.width) / 2
-            : sessionBlock.timeText.x,
+          x: sessionBlock.timeBadge.show !== false ? parseFloat(sessionBlock.timeBadge.x) + parseFloat(sessionBlock.timeBadge.width) / 2 : sessionBlock.timeText.x,
           y: (() => {
-            const centerY = sessionBlock.timeBadge.show !== false
-              ? (rowHeight * i + (rowHeight - parseFloat(sessionBlock.timeBadge.height)) / 2) + parseFloat(sessionBlock.timeBadge.height) / 2
-              : rowHeight * i + rowHeight / 2;
+            const centerY =
+              sessionBlock.timeBadge.show !== false
+                ? rowHeight * i + (rowHeight - parseFloat(sessionBlock.timeBadge.height)) / 2 + parseFloat(sessionBlock.timeBadge.height) / 2
+                : rowHeight * i + rowHeight / 2
 
             // Try to extract font-size to calculate baseline offset (approx 0.35-0.4em)
-            const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/);
-            const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24;
-            const baselineOffset = fontSize * 0.35;
+            const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/)
+            const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24
+            const baselineOffset = fontSize * 0.35
 
-            return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0);
+            return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0)
           })(),
           class: 'time',
           'text-anchor': 'middle',
-          style: sessionBlock.timeText.style
+          style: sessionBlock.timeText.style,
         },
         children: [
           {
@@ -76,9 +79,9 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
             value: formatTime(session.start),
             parent: null,
             attributes: {},
-            children: []
-          }
-        ]
+            children: [],
+          },
+        ],
       },
       {
         name: 'text',
@@ -89,7 +92,7 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
           x: sessionBlock.titleZh.x,
           y: rowHeight * i + (sessionBlock.titleZh.yOffset || 0),
           class: 'title',
-          style: sessionBlock.titleZh.style
+          style: sessionBlock.titleZh.style,
         },
         children: [
           {
@@ -98,9 +101,9 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
             value: session.zh.title,
             parent: null,
             attributes: {},
-            children: []
-          }
-        ]
+            children: [],
+          },
+        ],
       },
       {
         name: 'text',
@@ -111,7 +114,7 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
           x: sessionBlock.titleEn.x,
           y: rowHeight * i + (sessionBlock.titleEn.yOffset || 0),
           class: 'title',
-          style: sessionBlock.titleEn.style
+          style: sessionBlock.titleEn.style,
         },
         children: [
           {
@@ -120,9 +123,9 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
             value: session.en.title,
             parent: null,
             attributes: {},
-            children: []
-          }
-        ]
+            children: [],
+          },
+        ],
       },
       {
         name: 'text',
@@ -131,12 +134,9 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
         parent: null,
         attributes: {
           x: sessionBlock.speaker.x,
-          y: Math.max(
-            sessionBlock.speaker.yPadding,
-            rowHeight * i + (rowHeight - sessionBlock.speaker.lineHeight * speakers.length) / 2
-          ),
+          y: Math.max(sessionBlock.speaker.yPadding, rowHeight * i + (rowHeight - sessionBlock.speaker.lineHeight * speakers.length) / 2),
           class: 'speaker',
-          style: sessionBlock.speaker.style || ''
+          style: sessionBlock.speaker.style || '',
         },
         children: speakers.map(speaker => ({
           name: 'tspan',
@@ -145,7 +145,7 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
           parent: null,
           attributes: {
             x: sessionBlock.speaker.x,
-            dy: sessionBlock.speaker.dy
+            dy: sessionBlock.speaker.dy,
           },
           children: [
             {
@@ -154,11 +154,11 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
               value: speaker.zh.name,
               parent: null,
               attributes: {},
-              children: []
-            }
-          ]
-        }))
-      }
-    ]
+              children: [],
+            },
+          ],
+        })),
+      },
+    ],
   }
 }
