@@ -7,9 +7,9 @@
 ## 功能特色
 
 - **自動轉換**：從 Google Sheets 自動撈取議程資料並生成 SVG。
-- **樣式自訂 (New!)**：提供 `style.config.json` 設定檔，可調整配色、字型、間距等。
-- **Playground (New!)**：全新的網頁版編輯器，支援即時預覽、樣式調整與設定檔匯入/匯出。
-- **高相容性 (New!)**：優化的 SVG 文字對齊邏輯，確保在網頁與設計軟體 (Figma/AI) 中顯示一致。
+- **樣式自訂**：提供 `style.config.json` 設定檔，可調整配色、字型、間距等。
+- **Playground**：全新的網頁版編輯器，支援即時預覽、樣式調整與設定檔匯入/匯出。
+- **高相容性**：優化的 SVG 文字對齊邏輯，確保在網頁與設計軟體 (Figma/AI) 中顯示一致。
 
 ## 快速開始
 
@@ -28,7 +28,7 @@ npm install
 ```ini
 GCP_API_KEY="您的 Google Cloud API Key"
 SPREADSHEET_KEY="Google Sheets ID"
-# 若未設定，將自動使用預設的 g0v 議程表資料進行測試
+# 若未設定，將自動使用預設的 g0v Summit 2024 議程表資料進行測試
 ```
 
 ### 3. 執行生成
