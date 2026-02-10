@@ -5,7 +5,6 @@ import { stringify } from 'svgson'
 import { formatDate } from './utils/formatDate.js'
 import generateSchedule from './lib/schedule-json-generator/generateSchedule.js'
 import { scheduleTemplate } from './template/scheduleTemplate.js'
-const styleConfig = JSON.parse(await fs.readFile(new URL('./style.config.json', import.meta.url)))
 
 const outputDir = path.resolve('./dist')
 
@@ -19,26 +18,15 @@ if (process.env.GCP_API_KEY && process.env.SPREADSHEET_KEY) {
     avatar_base_url: process.env.AVATAR_BASE_URL
   })
 } else {
-  console.log('⚠️  Missing GCP_API_KEY or SPREADSHEET_KEY. Fetching production data for local testing...')
-  if (global.fetch) {
-    const res = await fetch('https://g0v.github.io/opass-schedule-to-svg/schedule.json')
-    if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`)
-    scheduleJsonStr = await res.text()
-  } else {
-    const https = await import('https')
-    scheduleJsonStr = await new Promise((resolve, reject) => {
-      https.get('https://g0v.github.io/opass-schedule-to-svg/schedule.json', (res) => {
-        let data = ''
-        res.on('data', (chunk) => data += chunk)
-        res.on('end', () => resolve(data))
-      }).on('error', reject)
-    })
-  }
+  console.warn('⚠️  Missing GCP_API_KEY or SPREADSHEET_KEY. Fetching production data for local testing...')
+  const res = await fetch('https://g0v.github.io/opass-schedule-to-svg/schedule.json')
+  scheduleJsonStr = await res.text()
 }
+
 const schedule = JSON.parse(scheduleJsonStr)
 const [dates, rooms] = getDatesAndRooms(schedule)
 const sessionGroups = getSessionGroups(schedule)
-const svgs = getSvgs(schedule, sessionGroups)
+const svgs = await getSvgs(schedule, sessionGroups)
 
 await fs.mkdir(outputDir, { recursive: true })
 const tasks = []
@@ -54,17 +42,29 @@ tasks.push(fs.copyFile(path.resolve('./style.config.json'), path.resolve(outputD
 
 // Copy template folder
 const templateOutputDir = path.resolve(outputDir, 'template')
-tasks.push(fs.mkdir(templateOutputDir, { recursive: true }).then(() => Promise.all([
-  fs.copyFile(path.resolve('./template/scheduleTemplate.js'), path.resolve(templateOutputDir, 'scheduleTemplate.js')),
-  fs.copyFile(path.resolve('./template/scheduleItemTemplate.js'), path.resolve(templateOutputDir, 'scheduleItemTemplate.js'))
-])))
+tasks.push(
+  fs
+    .mkdir(templateOutputDir, { recursive: true })
+    .then(() =>
+      Promise.all([
+        fs.copyFile(path.resolve('./template/scheduleTemplate.js'), path.resolve(templateOutputDir, 'scheduleTemplate.js')),
+        fs.copyFile(path.resolve('./template/scheduleItemTemplate.js'), path.resolve(templateOutputDir, 'scheduleItemTemplate.js'))
+      ])
+    )
+)
 
 // Copy utils folder
 const utilsOutputDir = path.resolve(outputDir, 'utils')
-tasks.push(fs.mkdir(utilsOutputDir, { recursive: true }).then(() => Promise.all([
-  fs.copyFile(path.resolve('./utils/formatDate.js'), path.resolve(utilsOutputDir, 'formatDate.js')),
-  fs.copyFile(path.resolve('./utils/formatTime.js'), path.resolve(utilsOutputDir, 'formatTime.js'))
-])))
+tasks.push(
+  fs
+    .mkdir(utilsOutputDir, { recursive: true })
+    .then(() =>
+      Promise.all([
+        fs.copyFile(path.resolve('./utils/formatDate.js'), path.resolve(utilsOutputDir, 'formatDate.js')),
+        fs.copyFile(path.resolve('./utils/formatTime.js'), path.resolve(utilsOutputDir, 'formatTime.js'))
+      ])
+    )
+)
 
 await Promise.all(tasks)
 
@@ -98,7 +98,8 @@ function getSessionGroups(schedule) {
   return groups
 }
 
-function getSvgs(schedule, sessionGroups) {
+async function getSvgs(schedule, sessionGroups) {
+  const styleConfig = JSON.parse(await fs.readFile(new URL('./style.config.json', import.meta.url)))
   const svgs = []
   for (const groupName in sessionGroups) {
     sessionGroups[groupName].sort((a, b) => new Date(a.start) - new Date(b.start))
