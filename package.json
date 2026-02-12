@@ -16,9 +16,12 @@
   "dependencies": {
     "dotenv": "^17.2.3",
     "spreadsheet-to-json": "^2.0.0",
-    "svgson": "^5.3.1"
+    "svgson": "^5.3.1",
+    "vue": "^3.5.28"
   },
   "devDependencies": {
-    "prettier": "^3.8.1"
+    "@vitejs/plugin-vue": "^6.0.4",
+    "prettier": "^3.8.1",
+    "vite": "^7.3.1"
   }
 }
