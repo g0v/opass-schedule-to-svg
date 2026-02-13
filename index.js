@@ -7,6 +7,7 @@ import generateSchedule from './lib/schedule-json-generator/generateSchedule.js'
 import { scheduleTemplate } from './template/scheduleTemplate.js'
 
 const outputDir = path.resolve('./dist')
+const outputDataDir = path.resolve(outputDir, 'data')
 
 let scheduleJsonStr
 
@@ -28,17 +29,15 @@ const [dates, rooms] = getDatesAndRooms(schedule)
 const sessionGroups = getSessionGroups(schedule)
 const svgs = await getSvgs(schedule, sessionGroups)
 
-await fs.mkdir(outputDir, { recursive: true })
+await fs.mkdir(outputDataDir, { recursive: true })
 const tasks = []
-tasks.push(fs.writeFile(path.resolve(outputDir, 'schedule.json'), scheduleJsonStr))
-tasks.push(fs.writeFile(path.resolve(outputDir, 'dates.json'), JSON.stringify(dates)))
-tasks.push(fs.writeFile(path.resolve(outputDir, 'rooms.json'), JSON.stringify(rooms)))
+tasks.push(fs.writeFile(path.resolve(outputDataDir, 'schedule.json'), scheduleJsonStr))
+tasks.push(fs.writeFile(path.resolve(outputDataDir, 'dates.json'), JSON.stringify(dates)))
+tasks.push(fs.writeFile(path.resolve(outputDataDir, 'rooms.json'), JSON.stringify(rooms)))
 svgs.forEach(svg => {
-  tasks.push(fs.writeFile(path.resolve(outputDir, svg.name), svg.content))
+  tasks.push(fs.writeFile(path.resolve(outputDataDir, svg.name), svg.content))
 })
-tasks.push(fs.copyFile(path.resolve('./index.html'), path.resolve(outputDir, 'index.html')))
-tasks.push(fs.copyFile(path.resolve('./playground.html'), path.resolve(outputDir, 'playground.html')))
-tasks.push(fs.copyFile(path.resolve('./style.config.json'), path.resolve(outputDir, 'style.config.json')))
+tasks.push(fs.copyFile(path.resolve('./style.config.json'), path.resolve(outputDataDir, 'style.config.json')))
 
 // Copy template folder
 const templateOutputDir = path.resolve(outputDir, 'template')

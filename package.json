@@ -9,7 +9,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "node dev-server.js",
+    "dev": "vite",
     "build": "node index.js"
   },
   "license": "MIT",
@@ -17,11 +17,13 @@
     "dotenv": "^17.2.3",
     "spreadsheet-to-json": "^2.0.0",
     "svgson": "^5.3.1",
-    "vue": "^3.5.28"
+    "vue": "^3.5.28",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.4",
     "prettier": "^3.8.1",
+    "sirv": "^3.0.2",
     "vite": "^7.3.1"
   }
 }
