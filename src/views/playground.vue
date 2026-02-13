@@ -3,6 +3,13 @@ import { ref, onMounted, watch } from 'vue'
 import { stringify } from 'svgson'
 import { scheduleTemplate } from '~/template/scheduleTemplate.js'
 import StyleInput from '~/components/StyleInput.vue'
+import ControlGroup from '~/components/ControlGroup.vue'
+import Control from '~/components/Control.vue'
+import InputRange from '~/components/Form/InputRange.vue'
+import InputText from '~/components/Form/InputText.vue'
+import InputColor from '~/components/Form/InputColor.vue'
+import InputCheckbox from '~/components/Form/InputCheckbox.vue'
+import InputTextarea from '~/components/Form/InputTextarea.vue'
 
 // Mock Data
 const mockSchedule = {
@@ -77,7 +84,7 @@ watch(
       console.error('Render error:', e)
     }
   },
-  { deep: true },
+  { deep: true }
 )
 
 const downloadConfig = () => {
@@ -191,19 +198,19 @@ const weightOptions = [
 </script>
 
 <template>
-  <div style="display: flex; width: 100%; height: 100%">
-    <div class="sidebar">
-      <div class="header">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px">
-          <h2 style="margin: 0">SVG Playground</h2>
-          <a href="./index.html" style="text-decoration: none">
-            <button class="btn" style="width: auto; aspect-ratio: auto; padding: 4px 12px; font-size: 13px">回首頁</button>
-          </a>
+  <div class="flex">
+    <div class="z-10 flex h-screen shrink-0 flex-col gap-6 overflow-y-auto border border-slate-300 p-6 shadow-xl" style="width: 400px">
+      <div>
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-xl font-bold text-gray-900">SVG Playground</h2>
+          <RouterLink to="/">
+            <button class="btn text-xs">回首頁</button>
+          </RouterLink>
         </div>
-        <div class="actions">
+        <div class="grid grid-cols-4 gap-2">
           <!-- Download Config (Style) -->
-          <button class="btn btn-primary" @click="downloadConfig" title="導出樣式設定檔 (JSON)">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button class="btn btn-square-icon" @click="downloadConfig" title="導出樣式設定檔 (JSON)">
+            <svg class="w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -212,8 +219,8 @@ const weightOptions = [
             </svg>
           </button>
           <!-- Download SVG (Image) -->
-          <button class="btn btn-success" @click="downloadSVG" title="導出圖檔 (SVG)">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button class="btn btn-square-icon" @click="downloadSVG" title="導出圖檔 (SVG)">
+            <svg class="w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -222,8 +229,8 @@ const weightOptions = [
             </svg>
           </button>
           <!-- Import Config -->
-          <label class="btn btn-warning" for="config-import" title="匯入樣式設定檔">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <label class="btn btn-square-icon" for="config-import" title="匯入樣式設定檔">
+            <svg class="w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -233,8 +240,8 @@ const weightOptions = [
             <input id="config-import" type="file" @change="importConfig" accept=".json" style="display: none" />
           </label>
           <!-- Reset All -->
-          <button class="btn btn-danger" @click="resetConfig" title="全部重置">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button class="btn btn-square-icon" @click="resetConfig" title="全部重置">
+            <svg class="w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </button>
@@ -242,608 +249,131 @@ const weightOptions = [
       </div>
 
       <!-- Global Layout -->
-      <div class="control-group" v-if="config">
-        <h3>
-          版面設定 (Global Layout)
-          <button class="reset-btn" @click="resetKeys(['rowHeight', 'svgWidth'])" title="重置此區塊">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </h3>
-        <div class="input-row">
-          <label>行高</label>
-          <div class="input-controls">
-            <input type="range" min="50" max="300" v-model.number="config.rowHeight" />
-            <input type="number" v-model.number="config.rowHeight" />
-          </div>
-        </div>
-        <div class="input-row">
-          <label>SVG 寬度</label>
-          <div class="input-controls">
-            <input type="range" min="300" max="2000" v-model.number="config.svgWidth" />
-            <input type="number" v-model.number="config.svgWidth" />
-          </div>
-        </div>
-      </div>
+      <ControlGroup v-if="config" title="版面設定" @reset="resetKeys(['rowHeight', 'svgWidth'])">
+        <Control title="行高">
+          <InputRange :min="50" :max="300" v-model.number="config.rowHeight" />
+          <InputText isNumber v-model.number="config.rowHeight" />
+        </Control>
+        <Control title="寬度">
+          <InputRange :min="300" :max="2000" v-model.number="config.svgWidth" />
+          <InputText isNumber v-model.number="config.svgWidth" />
+        </Control>
+      </ControlGroup>
 
       <!-- Session Block Layout -->
-      <div class="control-group" v-if="config">
-        <h3>
-          議程區塊樣式 (Session Block)
-          <button class="reset-btn" @click="resetKeys(['sessionBlock.background'])" title="重置此區塊">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </h3>
-        <div class="input-row">
-          <label>背景顏色</label>
-          <div class="input-controls">
-            <input type="color" v-model="config.sessionBlock.background.fill" />
-            <input type="text" v-model="config.sessionBlock.background.fill" />
-          </div>
-        </div>
-        <div class="input-row">
-          <label>邊框顏色</label>
-          <div class="input-controls">
-            <input type="color" v-model="config.sessionBlock.background.stroke" />
-            <input type="text" v-model="config.sessionBlock.background.stroke" />
-          </div>
-        </div>
-      </div>
+      <ControlGroup v-if="config" title="議程區塊樣式" @reset="resetKeys(['sessionBlock.background'])">
+        <Control title="背景顏色">
+          <InputColor v-model="config.sessionBlock.background.fill" />
+          <InputText v-model="config.sessionBlock.background.fill" />
+        </Control>
+        <Control title="邊框顏色">
+          <InputColor v-model="config.sessionBlock.background.stroke" />
+          <InputText v-model="config.sessionBlock.background.stroke" />
+        </Control>
+      </ControlGroup>
 
       <!-- Time Badge Section -->
-      <div class="control-group" v-if="config">
-        <h3>
-          時間標籤區塊 (Time Badge)
-          <button class="reset-btn" @click="resetKeys(['sessionBlock.timeBadge', 'sessionBlock.timeText'])" title="重置此區塊">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </h3>
+      <ControlGroup v-if="config" title="時間標籤區塊" @reset="resetKeys(['sessionBlock.timeBadge', 'sessionBlock.timeText'])">
+        <Control title="標籤樣式">
+          <InputCheckbox v-model="config.sessionBlock.timeBadge.show" />
+        </Control>
 
-        <h4>
-          標籤樣式 (Badge)
-          <label class="toggle-switch">
-            <input type="checkbox" v-model="config.sessionBlock.timeBadge.show" />
-            <span class="slider"></span>
-          </label>
-        </h4>
-
-        <div v-if="config.sessionBlock.timeBadge.show !== false">
-          <div class="input-row">
-            <label>背景顏色</label>
-            <div class="input-controls">
-              <input type="color" v-model="config.sessionBlock.timeBadge.fill" />
-              <input type="text" v-model="config.sessionBlock.timeBadge.fill" />
-            </div>
-          </div>
-          <div class="input-row">
-            <label>X 座標</label>
-            <div class="input-controls">
-              <input type="range" min="0" max="500" step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
-              <input type="number" step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
-            </div>
-          </div>
-          <div class="input-row">
-            <label>寬度</label>
-            <div class="input-controls">
-              <input type="range" min="10" max="300" step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
-              <input type="number" step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
-            </div>
-          </div>
-          <div class="input-row">
-            <label>高度</label>
-            <div class="input-controls">
-              <input type="range" min="10" max="100" step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
-              <input type="number" step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
-            </div>
-          </div>
-          <div class="input-row">
-            <label>圓角 RX</label>
-            <div class="input-controls">
-              <input type="range" min="0" max="50" v-model.number="config.sessionBlock.timeBadge.rx" />
-              <input type="number" v-model.number="config.sessionBlock.timeBadge.rx" />
-            </div>
-          </div>
-          <div class="input-row">
-            <label>圓角 RY</label>
-            <div class="input-controls">
-              <input type="range" min="0" max="50" v-model.number="config.sessionBlock.timeBadge.ry" />
-              <input type="number" v-model.number="config.sessionBlock.timeBadge.ry" />
-            </div>
-          </div>
-        </div>
-
-        <h4>時間文字 (Text)</h4>
-        <StyleInput :obj="config.sessionBlock.timeText" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
-        <StyleInput :obj="config.sessionBlock.timeText" prop="fill" type="color" label="文字顏色" />
-        <StyleInput :obj="config.sessionBlock.timeText" prop="font-family" type="select" :options="fontOptions" label="字型" />
-        <StyleInput :obj="config.sessionBlock.timeText" prop="font-weight" type="select" :options="weightOptions" label="字重" />
-        <div class="input-row">
-          <label>X 座標</label>
-          <div class="input-controls">
-            <input type="range" min="0" max="500" step="0.1" v-model.number="config.sessionBlock.timeText.x" />
-            <input type="number" step="0.1" v-model.number="config.sessionBlock.timeText.x" />
-          </div>
-        </div>
-        <div class="input-row">
-          <label>Y 位移</label>
-          <div class="input-controls">
-            <input type="range" min="0" max="100" step="1" v-model.number="config.sessionBlock.timeText.yOffset" />
-            <input type="number" step="1" v-model.number="config.sessionBlock.timeText.yOffset" />
-          </div>
-        </div>
-      </div>
+        <template v-if="config.sessionBlock.timeBadge.show !== false">
+          <Control title="背景顏色">
+            <InputColor v-model="config.sessionBlock.timeBadge.fill" />
+            <InputText v-model="config.sessionBlock.timeBadge.fill" />
+          </Control>
+          <Control title="X 座標">
+            <InputRange :min="0" :max="500" :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
+            <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
+          </Control>
+          <Control title="寬度">
+            <InputRange :min="10" :max="300" :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
+            <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
+          </Control>
+          <Control title="高度">
+            <InputRange :min="10" :max="100" :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
+            <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
+          </Control>
+          <Control title="圓角 RX">
+            <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.timeBadge.rx" />
+            <InputText isNumber v-model.number="config.sessionBlock.timeBadge.rx" />
+          </Control>
+          <Control title="圓角 RY">
+            <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.timeBadge.ry" />
+            <InputText isNumber v-model.number="config.sessionBlock.timeBadge.ry" />
+          </Control>
+        </template>
+      </ControlGroup>
 
       <!-- Session Title Section -->
-      <div class="control-group" v-if="config">
-        <h3>
-          議程名字區塊 (Titles)
-          <button class="reset-btn" @click="resetKeys(['sessionBlock.titleZh', 'sessionBlock.titleEn'])" title="重置此區塊">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </h3>
-
-        <h4>中文標題 (Zh)</h4>
+      <ControlGroup v-if="config" title="議程名字區塊" @reset="resetKeys(['sessionBlock.titleZh', 'sessionBlock.titleEn'])">
+        <h4 class="mb-3 shrink-0 text-sm font-bold text-gray-600">中文標題 (Zh)</h4>
         <StyleInput :obj="config.sessionBlock.titleZh" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
         <StyleInput :obj="config.sessionBlock.titleZh" prop="fill" type="color" label="文字顏色" />
         <StyleInput :obj="config.sessionBlock.titleZh" prop="font-family" type="select" :options="fontOptions" label="字型" />
         <StyleInput :obj="config.sessionBlock.titleZh" prop="font-weight" type="select" :options="weightOptions" label="字重" />
-        <div class="input-row">
-          <label>X 座標</label>
-          <div class="input-controls">
-            <input type="range" min="0" max="800" step="1" v-model.number="config.sessionBlock.titleZh.x" />
-            <input type="number" step="1" v-model.number="config.sessionBlock.titleZh.x" />
-          </div>
-        </div>
-        <div class="input-row">
-          <label>Y 位移</label>
-          <div class="input-controls">
-            <input type="range" min="0" max="150" step="1" v-model.number="config.sessionBlock.titleZh.yOffset" />
-            <input type="number" step="1" v-model.number="config.sessionBlock.titleZh.yOffset" />
-          </div>
-        </div>
+        <Control title="X 座標">
+          <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.titleZh.x" />
+          <InputText isNumber v-model.number="config.sessionBlock.titleZh.x" />
+        </Control>
+        <Control title="Y 位移">
+          <InputRange :min="0" :max="150" v-model.number="config.sessionBlock.titleZh.yOffset" />
+          <InputText isNumber v-model.number="config.sessionBlock.titleZh.yOffset" />
+        </Control>
 
-        <h4>英文標題 (En)</h4>
+        <h4 class="mb-3 shrink-0 text-sm font-bold text-gray-600">英文標題 (En)</h4>
         <StyleInput :obj="config.sessionBlock.titleEn" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
         <StyleInput :obj="config.sessionBlock.titleEn" prop="fill" type="color" label="文字顏色" />
         <StyleInput :obj="config.sessionBlock.titleEn" prop="font-family" type="select" :options="fontOptions" label="字型" />
         <StyleInput :obj="config.sessionBlock.titleEn" prop="font-weight" type="select" :options="weightOptions" label="字重" />
-        <div class="input-row">
-          <label>X 座標</label>
-          <div class="input-controls">
-            <input type="range" min="0" max="800" step="1" v-model.number="config.sessionBlock.titleEn.x" />
-            <input type="number" step="1" v-model.number="config.sessionBlock.titleEn.x" />
-          </div>
-        </div>
-        <div class="input-row">
-          <label>Y 位移</label>
-          <div class="input-controls">
-            <input type="range" min="0" max="150" step="1" v-model.number="config.sessionBlock.titleEn.yOffset" />
-            <input type="number" step="1" v-model.number="config.sessionBlock.titleEn.yOffset" />
-          </div>
-        </div>
-      </div>
+        <Control title="X 座標">
+          <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.titleEn.x" />
+          <InputText isNumber v-model.number="config.sessionBlock.titleEn.x" />
+        </Control>
+        <Control title="Y 位移">
+          <InputRange :min="0" :max="150" v-model.number="config.sessionBlock.titleEn.yOffset" />
+          <InputText isNumber v-model.number="config.sessionBlock.titleEn.yOffset" />
+        </Control>
+      </ControlGroup>
 
       <!-- Speaker Section -->
-      <div class="control-group" v-if="config">
-        <h3>
-          講者區塊 (Speakers)
-          <button class="reset-btn" @click="resetKeys(['sessionBlock.speaker'])" title="重置此區塊">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </h3>
+      <ControlGroup v-if="config" title="講者區塊" @reset="resetKeys(['sessionBlock.speaker'])">
         <StyleInput :obj="config.sessionBlock.speaker" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
         <StyleInput :obj="config.sessionBlock.speaker" prop="fill" type="color" label="文字顏色" />
         <StyleInput :obj="config.sessionBlock.speaker" prop="font-family" type="select" :options="fontOptions" label="字型" />
         <StyleInput :obj="config.sessionBlock.speaker" prop="font-weight" type="select" :options="weightOptions" label="字重" />
-        <div class="input-row">
-          <label>X 座標</label>
-          <div class="input-controls">
-            <input type="range" min="0" max="1000" step="1" v-model.number="config.sessionBlock.speaker.x" />
-            <input type="number" step="1" v-model.number="config.sessionBlock.speaker.x" />
-          </div>
-        </div>
-        <div class="input-row">
-          <label>行高</label>
-          <div class="input-controls">
-            <input type="range" min="10" max="60" step="1" v-model.number="config.sessionBlock.speaker.lineHeight" />
-            <input type="number" step="1" v-model.number="config.sessionBlock.speaker.lineHeight" />
-          </div>
-        </div>
-        <div class="input-row">
-          <label>DY</label>
-          <div class="input-controls">
-            <input type="range" min="10" max="60" step="1" v-model.number="config.sessionBlock.speaker.dy" />
-            <input type="number" step="1" v-model.number="config.sessionBlock.speaker.dy" />
-          </div>
-        </div>
-        <div class="input-row">
-          <label>Y Padding</label>
-          <div class="input-controls">
-            <input type="range" min="0" max="50" step="1" v-model.number="config.sessionBlock.speaker.yPadding" />
-            <input type="number" step="1" v-model.number="config.sessionBlock.speaker.yPadding" />
-          </div>
-        </div>
-      </div>
+        <Control title="X 座標">
+          <InputRange :min="0" :max="1000" v-model.number="config.sessionBlock.speaker.x" />
+          <InputText isNumber v-model.number="config.sessionBlock.speaker.x" />
+        </Control>
+        <Control title="行高">
+          <InputRange :min="10" :max="60" v-model.number="config.sessionBlock.speaker.lineHeight" />
+          <InputText isNumber v-model.number="config.sessionBlock.speaker.lineHeight" />
+        </Control>
+        <Control title="DY">
+          <InputRange :min="10" :max="60" v-model.number="config.sessionBlock.speaker.dy" />
+          <InputText isNumber v-model.number="config.sessionBlock.speaker.dy" />
+        </Control>
+        <Control title="Y 邊距">
+          <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.speaker.yPadding" />
+          <InputText isNumber v-model.number="config.sessionBlock.speaker.yPadding" />
+        </Control>
+      </ControlGroup>
 
-      <div class="control-group" v-if="config">
-        <h3>
-          CSS 樣式
-          <button class="reset-btn" @click="resetKeys(['css'])" title="重置此區塊">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </h3>
-        <textarea class="css-editor" v-model="config.css"></textarea>
-      </div>
+      <ControlGroup v-if="config" title="CSS 樣式" @reset="resetKeys(['css'])">
+        <InputTextarea v-model="config.css" />
+      </ControlGroup>
     </div>
 
-    <div class="main-content">
-      <div class="preview-container" v-html="svgHtml"></div>
+    <div class="h-screen grow overflow-auto bg-gray-100 p-6">
+      <div class="playground-preview max-w-full bg-white shadow-lg" v-html="svgHtml"></div>
     </div>
   </div>
 </template>
 
-<style scoped>
-:root {
-  --primary-color: #8da4be;
-  --border-color: #e5e7eb;
-  --bg-sidebar: #ffffff;
-  --bg-main: #f3f4f6;
-  --text-color: #374151;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  margin: 0;
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-  color: var(--text-color);
-}
-
-.sidebar {
-  width: 400px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-color);
-  overflow-y: auto;
-  padding: 24px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  z-index: 10;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
-}
-
-.header h2 {
-  margin: 0 0 16px 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.main-content {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  background: var(--bg-main);
-  overflow: auto;
-  padding: 24px;
-  position: relative;
-}
-
-.preview-container {
-  background: white;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  max-width: 100%;
-  padding: 1px;
-  /* Preventing margin collapse */
-}
-
-.control-group {
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
-  background: white;
-  transition: box-shadow 0.2s;
-}
-
-.control-group h3 {
-  margin-top: 0;
-  margin-bottom: 16px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #111827;
-  border-bottom: 2px solid #f3f4f6;
-  padding-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.reset-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  color: #9ca3af;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.reset-btn:hover {
-  color: #ef4444;
-  background: #fef2f2;
-}
-
-.reset-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.control-group h4 {
-  margin: 20px 0 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.input-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  gap: 12px;
-}
-
-.input-row label:not(.toggle-switch) {
-  font-size: 0.875rem;
-  color: #4b5563;
-  flex-shrink: 0;
-  width: 70px;
-}
-
-.input-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0;
-  justify-content: flex-end;
-}
-
-/* Toggle Switch */
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-  margin-left: auto;
-  /* Align to right if needed */
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: 0.4s;
-  border-radius: 24px;
-}
-
-.slider:before {
-  position: absolute;
-  content: '';
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.4s;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-input:checked + .slider {
-  background-color: var(--primary-color);
-}
-
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-
-input[type='range'] {
-  -webkit-appearance: none;
-  appearance: none;
-  flex: 1;
-  background: #e5e7eb;
-  height: 6px;
-  border-radius: 3px;
-  outline: none;
-  cursor: pointer;
-}
-
-/* Chrome/Safari 拉桿圓頭 */
-input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  background: var(--primary-color);
-  border: 3px solid white;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  transition:
-    transform 0.1s,
-    background 0.2s;
-}
-
-input[type='range']::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-}
-
-/* Firefox 拉桿圓頭 */
-input[type='range']::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  background: var(--primary-color);
-  border: 3px solid white;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-}
-
-input[type='number'],
-input[type='text'] {
-  width: 70px;
-  padding: 6px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  text-align: right;
-  outline: none;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-}
-
-input[type='number']:focus,
-input[type='text']:focus,
-textarea:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-input[type='color'] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  border: none;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  border-radius: 50%;
-  overflow: hidden;
-  padding: 0;
-  background: none;
-  box-shadow: 0 0 0 1px var(--border-color);
-}
-
-input[type='color']::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-input[type='color']::-webkit-color-swatch {
-  border: none;
-}
-
-textarea.css-editor {
+<style>
+.playground-preview svg {
   width: 100%;
-  height: 120px;
-  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-  font-size: 0.85rem;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px;
-  box-sizing: border-box;
-  resize: vertical;
-  background-color: #f9fafb;
-  color: #374151;
-  line-height: 1.4;
-}
-
-.actions {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 4px 0;
-  margin-top: 10px;
-}
-
-.btn {
-  aspect-ratio: 1;
-  padding: 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  color: #6b7280;
-}
-
-.btn svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2;
-}
-
-.btn:active {
-  transform: scale(0.9);
-}
-
-/* Hover 時強化顏色並填滿底色 */
-.btn-primary:hover {
-  background: #8da4be;
-  color: white;
-  border-color: #8da4be;
-}
-
-.btn-success:hover {
-  background: #10b981;
-  color: white;
-  border-color: #10b981;
-}
-
-.btn-warning:hover {
-  background: #f59e0b;
-  color: white;
-  border-color: #f59e0b;
-}
-
-.btn-danger:hover {
-  background: #ef4444;
-  color: white;
-  border-color: #ef4444;
 }
 </style>

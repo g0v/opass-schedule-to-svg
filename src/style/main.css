@@ -2,6 +2,11 @@
 
 @layer base {
   :root {
+    --primary-color: #8da4be;
+    --border-color: #e5e7eb;
+    --bg-sidebar: #ffffff;
+    --bg-main: #f3f4f6;
+    --text-color: #374151;
     font-family:
       -apple-system,
       BlinkMacSystemFont,
@@ -13,14 +18,26 @@
       'Apple Color Emoji',
       'Segoe UI Emoji',
       Segoe UI Symbol;
-    --background: #111111;
-    --primary: #c42026;
+  }
+
+  body {
+    color: var(--text-color);
+    height: 100vh;
+  }
+
+  svg {
+    max-width: 100%;
+    height: auto;
   }
 }
 
 @layer utilities {
   .btn {
     @apply cursor-pointer rounded border border-slate-300 p-2 text-slate-700 transition-colors duration-200 hover:bg-slate-200 hover:text-slate-900;
+  }
+
+  .btn-square-icon {
+    @apply grid aspect-square place-items-center;
   }
 
   .btn.active {
