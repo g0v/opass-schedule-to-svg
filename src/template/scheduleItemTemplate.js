@@ -1,4 +1,4 @@
-import { formatTime } from '../utils/formatTime.js'
+import { formatTime } from '../../utils/formatTime.js'
 
 export function scheduleItemTemplate(i, session, speakerList, config) {
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)

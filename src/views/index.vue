@@ -46,9 +46,9 @@ function download() {
 
       <div class="header-right" style="display: flex; gap: 0.5rem; align-items: flex-end">
         <template v-if="hasDateAndRoom">
-          <a href="./playground.html" style="text-decoration: none">
+          <RouterLink to="/playground" style="text-decoration: none">
             <button type="button">Playground</button>
-          </a>
+          </RouterLink>
           <button @click="download">Download</button>
         </template>
       </div>
@@ -61,6 +61,60 @@ function download() {
 </template>
 
 <style scoped>
+:root {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif,
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    Segoe UI Symbol;
+  --background: #111111;
+  --primary: #c42026;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  color: white;
+}
+
+body {
+  background: var(--background);
+  padding: 1rem 0.5rem;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+img {
+  max-width: 100%;
+}
+
+h1 {
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+button {
+  all: unset;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--primary);
+  border-radius: 0.25rem;
+  background-color: transparent;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+button:hover,
+button.active {
+  background-color: var(--primary);
+}
+
 .btns {
   display: flex;
   gap: 0.5rem;

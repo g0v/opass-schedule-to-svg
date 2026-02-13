@@ -4,7 +4,7 @@ import path from 'path'
 import { stringify } from 'svgson'
 import { formatDate } from './utils/formatDate.js'
 import generateSchedule from './lib/schedule-json-generator/generateSchedule.js'
-import { scheduleTemplate } from './template/scheduleTemplate.js'
+import { scheduleTemplate } from './src/template/scheduleTemplate.js'
 
 const outputDir = path.resolve('./dist')
 const outputDataDir = path.resolve(outputDir, 'data')
@@ -29,6 +29,7 @@ const [dates, rooms] = getDatesAndRooms(schedule)
 const sessionGroups = getSessionGroups(schedule)
 const svgs = await getSvgs(schedule, sessionGroups)
 
+await fs.rm(outputDir, { recursive: true, force: true })
 await fs.mkdir(outputDataDir, { recursive: true })
 const tasks = []
 tasks.push(fs.writeFile(path.resolve(outputDataDir, 'schedule.json'), scheduleJsonStr))
@@ -38,32 +39,6 @@ svgs.forEach(svg => {
   tasks.push(fs.writeFile(path.resolve(outputDataDir, svg.name), svg.content))
 })
 tasks.push(fs.copyFile(path.resolve('./style.config.json'), path.resolve(outputDataDir, 'style.config.json')))
-
-// Copy template folder
-const templateOutputDir = path.resolve(outputDir, 'template')
-tasks.push(
-  fs
-    .mkdir(templateOutputDir, { recursive: true })
-    .then(() =>
-      Promise.all([
-        fs.copyFile(path.resolve('./template/scheduleTemplate.js'), path.resolve(templateOutputDir, 'scheduleTemplate.js')),
-        fs.copyFile(path.resolve('./template/scheduleItemTemplate.js'), path.resolve(templateOutputDir, 'scheduleItemTemplate.js')),
-      ]),
-    ),
-)
-
-// Copy utils folder
-const utilsOutputDir = path.resolve(outputDir, 'utils')
-tasks.push(
-  fs
-    .mkdir(utilsOutputDir, { recursive: true })
-    .then(() =>
-      Promise.all([
-        fs.copyFile(path.resolve('./utils/formatDate.js'), path.resolve(utilsOutputDir, 'formatDate.js')),
-        fs.copyFile(path.resolve('./utils/formatTime.js'), path.resolve(utilsOutputDir, 'formatTime.js')),
-      ]),
-    ),
-)
 
 await Promise.all(tasks)
 
