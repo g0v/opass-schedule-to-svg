@@ -30,26 +30,26 @@ function download() {
 </script>
 
 <template>
-  <div>
-    <h1>Opass Schedule to SVG</h1>
+  <div class="mx-auto px-2 py-4" style="max-width: 1080px">
+    <h1 class="mb-2 text-3xl">Opass Schedule to SVG</h1>
 
-    <header class="header">
-      <div class="header-left">
-        <div class="btns">
-          <button v-for="date in dates" @click="setDate(date)" :class="{ active: selectedDate === date }">{{ date }}</button>
+    <header class="mb-2 flex">
+      <div class="mr-auto">
+        <div class="mb-2 flex gap-2">
+          <button v-for="date in dates" @click="setDate(date)" class="btn" :class="{ active: selectedDate === date }">{{ date }}</button>
         </div>
 
-        <div v-if="selectedDate" class="btns">
-          <button v-for="room in rooms" @click="setRoom(room)" :class="{ active: selectedRoom === room }">{{ room }}</button>
+        <div v-if="selectedDate" class="flex gap-2">
+          <button v-for="room in rooms" @click="setRoom(room)" class="btn" :class="{ active: selectedRoom === room }">{{ room }}</button>
         </div>
       </div>
 
-      <div class="header-right" style="display: flex; gap: 0.5rem; align-items: flex-end">
+      <div class="flex items-end gap-2 self-end">
         <template v-if="hasDateAndRoom">
-          <RouterLink to="/playground" style="text-decoration: none">
-            <button type="button">Playground</button>
+          <RouterLink to="/playground">
+            <button class="btn" type="button">Playground</button>
           </RouterLink>
-          <button @click="download">Download</button>
+          <button @click="download" class="btn">Download</button>
         </template>
       </div>
     </header>
@@ -59,81 +59,3 @@ function download() {
     </div>
   </div>
 </template>
-
-<style scoped>
-:root {
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif,
-    'Apple Color Emoji',
-    'Segoe UI Emoji',
-    Segoe UI Symbol;
-  --background: #111111;
-  --primary: #c42026;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  color: white;
-}
-
-body {
-  background: var(--background);
-  padding: 1rem 0.5rem;
-  max-width: 1080px;
-  margin: 0 auto;
-}
-
-img {
-  max-width: 100%;
-}
-
-h1 {
-  margin-bottom: 1rem;
-  font-weight: 500;
-}
-
-button {
-  all: unset;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border: 2px solid var(--primary);
-  border-radius: 0.25rem;
-  background-color: transparent;
-  color: white;
-  transition: all 0.2s ease;
-}
-
-button:hover,
-button.active {
-  background-color: var(--primary);
-}
-
-.btns {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btns:not(:last-child) {
-  margin-bottom: 0.5rem;
-}
-
-.header {
-  display: flex;
-  margin-bottom: 0.5rem;
-}
-
-.header-left {
-  margin-right: auto;
-}
-
-.header-right {
-  align-self: flex-end;
-}
-</style>
