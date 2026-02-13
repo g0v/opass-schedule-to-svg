@@ -1,8 +1,9 @@
 {
   "semi": false,
   "singleQuote": true,
-  "trailingComma": "all",
+  "trailingComma": "es5",
   "printWidth": 200,
   "bracketSpacing": true,
-  "arrowParens": "avoid"
+  "arrowParens": "avoid",
+  "plugins": ["prettier-plugin-tailwindcss"]
 }

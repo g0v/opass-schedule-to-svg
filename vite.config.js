@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'node:path'
 import sirv from 'sirv'
@@ -8,6 +9,7 @@ import sirv from 'sirv'
 export default defineConfig({
   plugins: [
     vue(),
+    tailwindcss(),
     {
       name: 'serve-data-from-dist',
       apply: 'serve',
