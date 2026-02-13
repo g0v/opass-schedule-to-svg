@@ -29,7 +29,7 @@ const [dates, rooms] = getDatesAndRooms(schedule)
 const sessionGroups = getSessionGroups(schedule)
 const svgs = await getSvgs(schedule, sessionGroups)
 
-await fs.rm(outputDir, { recursive: true, force: true })
+await fs.rm(outputDataDir, { recursive: true, force: true })
 await fs.mkdir(outputDataDir, { recursive: true })
 const tasks = []
 tasks.push(fs.writeFile(path.resolve(outputDataDir, 'schedule.json'), scheduleJsonStr))
