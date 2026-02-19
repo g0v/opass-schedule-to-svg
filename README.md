@@ -26,7 +26,7 @@ npm install
 
 ```ini
 GCP_API_KEY="Google Cloud API Key"
-SPREADSHEET_KEY="Google Sheets ID"
+SPREADSHEET_ID="Google Sheets ID"
 
 # 若未設定，將自動使用預設的 g0v Summit 2024 議程表資料進行測試
 ```

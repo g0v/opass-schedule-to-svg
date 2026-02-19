@@ -11,15 +11,15 @@ const outputDataDir = path.resolve(outputDir, 'data')
 
 let schedule
 
-if (process.env.GCP_API_KEY && process.env.SPREADSHEET_KEY) {
+if (process.env.GCP_API_KEY && process.env.SPREADSHEET_ID) {
   schedule = await scheduleToJson({
     apiKey: process.env.GCP_API_KEY,
-    spreadsheetId: process.env.SPREADSHEET_KEY,
+    spreadsheetId: process.env.SPREADSHEET_ID,
     defaultAvatar: process.env.DEFAULT_AVATAR,
     avatarBaseUrl: process.env.AVATAR_BASE_URL,
   })
 } else {
-  console.warn('⚠️  Missing GCP_API_KEY or SPREADSHEET_KEY. Fetching production data for local testing...')
+  console.warn('⚠️  Missing GCP_API_KEY or SPREADSHEET_ID. Fetching production data for local testing...')
   const res = await fetch('https://g0v.github.io/opass-schedule-to-svg/schedule.json')
   schedule = JSON.parse(await res.text())
 }
