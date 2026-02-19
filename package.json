@@ -17,6 +17,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "dotenv": "^17.2.3",
+    "opass-schedule-to-json": "^1.0.0",
     "spreadsheet-to-json": "^2.0.0",
     "svgson": "^5.3.1",
     "tailwindcss": "^4.1.18",
