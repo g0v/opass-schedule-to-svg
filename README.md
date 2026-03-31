@@ -64,7 +64,7 @@ npm run build
 
 ## 相關連結
 
-目前使用的資料為 Summit 2024
+目前使用的資料為 Summit 2026
 
-- [Google Sheets](https://docs.google.com/spreadsheets/d/1bD97q0i9dmHOlG4hoPln157O_VKCwAwIvo8jMLiWnks/)
+- [Google Sheets](https://docs.google.com/spreadsheets/d/1jD0RtB_J4XxcwbgABtHJWo6XECffTLP6_bgzrcy_rqo)
 - [JSON](https://g0v.github.io/opass-schedule-to-svg/data/schedule.json)
