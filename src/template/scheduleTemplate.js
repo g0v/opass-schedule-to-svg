@@ -1,8 +1,13 @@
-import { scheduleItemTemplate } from './scheduleItemTemplate.js'
+import { getSessionLayout, scheduleItemTemplate } from './scheduleItemTemplate.js'
 
 export function scheduleTemplate(schedule, sessions, config) {
-  const { rowHeight, svgWidth, svgPreserveAspectRatio, css } = config
-  const items = sessions.map((session, i) => scheduleItemTemplate(i, session, schedule.speakers, config))
+  const { svgWidth, svgPreserveAspectRatio, css } = config
+  let currentY = 0
+  const items = sessions.map(session => {
+    const layout = getSessionLayout(session, schedule.speakers, config, currentY)
+    currentY += layout.height
+    return scheduleItemTemplate(session, schedule.speakers, config, layout)
+  })
 
   return {
     name: 'svg',
@@ -12,8 +17,8 @@ export function scheduleTemplate(schedule, sessions, config) {
     attributes: {
       xmlns: 'http://www.w3.org/2000/svg',
       width: svgWidth,
-      height: rowHeight * items.length,
-      viewBox: `0 0 ${svgWidth} ${rowHeight * items.length}`,
+      height: currentY,
+      viewBox: `0 0 ${svgWidth} ${currentY}`,
       preserveAspectRatio: svgPreserveAspectRatio,
     },
     children: [

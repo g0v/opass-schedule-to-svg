@@ -1,8 +1,8 @@
 import { formatTime } from '../../utils/formatTime.js'
 
-export function scheduleItemTemplate(i, session, speakerList, config) {
+export function scheduleItemTemplate(session, speakerList, config, layout) {
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
-  const { rowHeight, svgWidth, sessionBlock } = config
+  const { svgWidth, sessionBlock } = config
 
   return {
     name: 'g',
@@ -20,9 +20,9 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
         value: '',
         parent: null,
         attributes: {
-          y: rowHeight * i,
+          y: layout.y,
           width: svgWidth,
-          height: rowHeight,
+          height: layout.height,
           stroke: sessionBlock.background.stroke,
           fill: sessionBlock.background.fill,
         },
@@ -37,7 +37,7 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
               parent: null,
               attributes: {
                 x: sessionBlock.timeBadge.x,
-                y: rowHeight * i + (rowHeight - sessionBlock.timeBadge.height) / 2,
+                y: layout.y + (layout.height - sessionBlock.timeBadge.height) / 2,
                 width: sessionBlock.timeBadge.width,
                 height: sessionBlock.timeBadge.height,
                 rx: sessionBlock.timeBadge.rx,
@@ -58,8 +58,8 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
           y: (() => {
             const centerY =
               sessionBlock.timeBadge.show !== false
-                ? rowHeight * i + (rowHeight - parseFloat(sessionBlock.timeBadge.height)) / 2 + parseFloat(sessionBlock.timeBadge.height) / 2
-                : rowHeight * i + rowHeight / 2
+                ? layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + parseFloat(sessionBlock.timeBadge.height) / 2
+                : layout.y + layout.height / 2
 
             // Try to extract font-size to calculate baseline offset (approx 0.35-0.4em)
             const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/)
@@ -90,7 +90,7 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
         parent: null,
         attributes: {
           x: sessionBlock.titleZh.x,
-          y: rowHeight * i + (sessionBlock.titleZh.yOffset || 0),
+          y: layout.y + (sessionBlock.titleZh.yOffset || 0),
           class: 'title',
           style: sessionBlock.titleZh.style,
         },
@@ -112,7 +112,7 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
         parent: null,
         attributes: {
           x: sessionBlock.titleEn.x,
-          y: rowHeight * i + (sessionBlock.titleEn.yOffset || 0),
+          y: layout.y + (sessionBlock.titleEn.yOffset || 0),
           class: 'title',
           style: sessionBlock.titleEn.style,
         },
@@ -134,7 +134,7 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
         parent: null,
         attributes: {
           x: sessionBlock.speaker.x,
-          y: Math.max(sessionBlock.speaker.yPadding, rowHeight * i + (rowHeight - sessionBlock.speaker.lineHeight * speakers.length) / 2),
+          y: getSpeakerY(layout.y, layout.height, sessionBlock.speaker, speakers.length),
           class: 'speaker',
           style: sessionBlock.speaker.style || '',
         },
@@ -161,4 +161,45 @@ export function scheduleItemTemplate(i, session, speakerList, config) {
       },
     ],
   }
+}
+
+function getSpeakerY(rowTop, rowHeight, speakerConfig, speakerCount) {
+  if (speakerCount === 0) {
+    return rowTop + rowHeight / 2
+  }
+
+  const { blockHeight, ascent } = getSpeakerMetrics(speakerConfig, speakerCount)
+  return rowTop + (rowHeight - blockHeight) / 2 + ascent
+}
+
+export function getSessionLayout(session, speakerList, config, y) {
+  const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
+  const baseHeight = Number(config.rowHeight) || 0
+  const speakerConfig = config.sessionBlock.speaker
+  const yPadding = Number(speakerConfig.yPadding) || 0
+  const { blockHeight } = getSpeakerMetrics(speakerConfig, speakers.length)
+  const speakerHeight = speakers.length > 0 ? blockHeight + yPadding * 2 : 0
+
+  return {
+    y,
+    height: Math.max(baseHeight, speakerHeight),
+  }
+}
+
+function getSpeakerMetrics(speakerConfig, speakerCount) {
+  if (speakerCount === 0) {
+    return { blockHeight: 0, ascent: 0 }
+  }
+
+  const fontSize = getFontSize(speakerConfig.style, Number(speakerConfig.lineHeight) || Number(speakerConfig.dy) || 24)
+  const dy = Number(speakerConfig.dy) || Number(speakerConfig.lineHeight) || fontSize
+  const ascent = fontSize * 0.8
+  const blockHeight = fontSize + dy * (speakerCount - 1)
+
+  return { blockHeight, ascent }
+}
+
+function getFontSize(style, fallback) {
+  const match = (style || '').match(/font-size:\s*([\d.]+)px/i)
+  return match ? parseFloat(match[1]) : fallback
 }
