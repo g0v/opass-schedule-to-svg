@@ -9,6 +9,8 @@ const hasDateAndRoom = computed(() => selectedDate.value && selectedRoom.value)
 
 onMounted(async () => {
   ;[dates.value, rooms.value] = await Promise.all([fetch('./data/dates.json').then(res => res.json()), fetch('./data/rooms.json').then(res => res.json())])
+  dates.value.sort()
+  rooms.value.sort()
 })
 
 function setDate(date) {
