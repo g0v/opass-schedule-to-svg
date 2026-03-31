@@ -31,7 +31,12 @@ function download() {
 
 <template>
   <div class="mx-auto px-2 py-4" style="max-width: 1080px">
-    <h1 class="mb-2 text-3xl">Opass Schedule to SVG</h1>
+    <div class="flex">
+      <h1 class="mr-auto mb-2 text-3xl">Opass Schedule to SVG</h1>
+      <RouterLink to="/playground">
+        <button class="btn" type="button">Playground</button>
+      </RouterLink>
+    </div>
 
     <header class="mb-2 flex">
       <div class="mr-auto">
@@ -46,9 +51,6 @@ function download() {
 
       <div class="flex items-end gap-2 self-end">
         <template v-if="hasDateAndRoom">
-          <RouterLink to="/playground">
-            <button class="btn" type="button">Playground</button>
-          </RouterLink>
           <button @click="download" class="btn">Download</button>
         </template>
       </div>
