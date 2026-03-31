@@ -172,7 +172,7 @@ const resetKeys = paths => {
 }
 
 const fontOptions = [
-  { label: 'Onest', value: "'Onest-Regular_SemiBold', 'Onest-Regular_Regular', 'Onest', sans-serif" },
+  { label: 'Liberation Sans / Arial', value: "'Liberation Sans', Arial, sans-serif" },
   { label: '思源黑體', value: "'NotoSansTC-Regular', 'Noto Sans TC', sans-serif" },
   { label: '思源宋體', value: "'Noto Serif TC', serif" },
   { label: '蘋方 / 微軟正黑體', value: 'sans-serif' },

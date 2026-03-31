@@ -19,7 +19,7 @@
     "timeText": {
       "x": "95.75",
       "yOffset": 0,
-      "style": "font-family:'Onest-Regular_SemiBold', 'Onest-Regular_Regular', 'Onest', sans-serif;font-weight:600;font-size:24.1px;fill:#ffffff"
+      "style": "font-family:'Liberation Sans', Arial, sans-serif;font-weight:600;font-size:24.1px;fill:#ffffff"
     },
     "titleZh": {
       "x": "318.1",
@@ -29,7 +29,7 @@
     "titleEn": {
       "x": "318.1",
       "yOffset": 80,
-      "style": "font-family:'Onest-Regular_SemiBold', 'Onest-Regular_Regular', 'Onest', sans-serif;font-weight:400;font-size:13.3px;fill:#000000"
+      "style": "font-family:'Liberation Sans', Arial, sans-serif;font-weight:400;font-size:13.3px;fill:#000000"
     },
     "yPadding": 12,
     "speaker": {

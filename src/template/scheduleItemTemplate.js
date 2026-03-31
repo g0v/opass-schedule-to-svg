@@ -5,6 +5,10 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
   const { svgWidth, sessionBlock } = config
   const titleLayout = layout.titleLayout
+  const timeTextStyle = normalizeTextStyle(sessionBlock.timeText.style)
+  const titleZhStyle = normalizeTextStyle(sessionBlock.titleZh.style)
+  const titleEnStyle = normalizeTextStyle(sessionBlock.titleEn.style)
+  const speakerStyle = normalizeTextStyle(sessionBlock.speaker.style || '')
 
   return {
     name: 'g',
@@ -72,7 +76,7 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
           })(),
           class: 'time',
           'text-anchor': 'middle',
-          style: sessionBlock.timeText.style,
+          style: timeTextStyle,
         },
         children: [
           {
@@ -100,7 +104,7 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
             x: sessionBlock.titleZh.x,
             y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.topY, titleLayout.zhFontSize, titleLayout.zhLineHeight, index),
             class: 'title',
-            style: sessionBlock.titleZh.style,
+            style: titleZhStyle,
           },
           children: [
             {
@@ -129,7 +133,7 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
             x: sessionBlock.titleEn.x,
             y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.enTopY, titleLayout.enFontSize, titleLayout.enLineHeight, index),
             class: 'title',
-            style: sessionBlock.titleEn.style,
+            style: titleEnStyle,
           },
           children: [
             {
@@ -158,7 +162,7 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
             x: sessionBlock.speaker.x,
             y: getSpeakerY(layout.y, layout.height, sessionBlock.speaker, speakers.length, index),
             class: 'speaker',
-            style: sessionBlock.speaker.style || '',
+            style: speakerStyle,
           },
           children: [
             {
@@ -288,8 +292,9 @@ function wrapTextWithPretext(text, style, maxWidth) {
   if (!text) {
     return ['']
   }
-  const lineHeight = getLineHeight(style)
-  const prepared = prepareWithSegments(text, getCanvasFont(style))
+  const normalizedStyle = normalizeTextStyle(style)
+  const lineHeight = getLineHeight(normalizedStyle)
+  const prepared = prepareWithSegments(text, getCanvasFont(normalizedStyle))
   const { lines } = layoutWithLines(prepared, maxWidth, lineHeight)
   return lines.length > 0 ? lines.map(line => line.text) : ['']
 }
@@ -306,6 +311,42 @@ function getCanvasFont(style) {
 function getStyleValue(style, property) {
   const match = (style || '').match(new RegExp(`${escapeRegExp(property)}\\s*:\\s*([^;]+)`, 'i'))
   return match ? match[1].trim() : ''
+}
+
+function normalizeTextStyle(style) {
+  const fontFamily = getStyleValue(style, 'font-family')
+
+  if (!fontFamily) {
+    return style || ''
+  }
+
+  return replaceStyleValue(style, 'font-family', normalizeFontFamily(fontFamily))
+}
+
+function normalizeFontFamily(fontFamily) {
+  if (/Onest-Regular_|'Onest'|\bOnest\b/i.test(fontFamily)) {
+    return "'Liberation Sans', Arial, sans-serif"
+  }
+
+  if (/NotoSansTC-Regular|'Noto Sans TC'|\bNoto Sans TC\b/i.test(fontFamily)) {
+    return "'Noto Sans CJK TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif"
+  }
+
+  return fontFamily
+}
+
+function replaceStyleValue(style, property, nextValue) {
+  if (!style) {
+    return `${property}:${nextValue}`
+  }
+
+  const pattern = new RegExp(`(${escapeRegExp(property)}\\s*:\\s*)([^;]+)`, 'i')
+  if (pattern.test(style)) {
+    return style.replace(pattern, `$1${nextValue}`)
+  }
+
+  const separator = style.trim().endsWith(';') || style.trim() === '' ? '' : ';'
+  return `${style}${separator}${property}:${nextValue}`
 }
 
 function escapeRegExp(value) {
