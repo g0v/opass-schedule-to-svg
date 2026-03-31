@@ -3,8 +3,22 @@ import fs from 'fs/promises'
 import path from 'path'
 import { stringify } from 'svgson'
 import { scheduleToJson } from 'opass-schedule-to-json'
+import { createCanvas } from '@napi-rs/canvas'
 import { formatDate } from './utils/formatDate.js'
-import { scheduleTemplate } from './src/template/scheduleTemplate.js'
+
+if (typeof globalThis.OffscreenCanvas === 'undefined') {
+  globalThis.OffscreenCanvas = class OffscreenCanvas {
+    constructor(width, height) {
+      this.canvas = createCanvas(width, height)
+    }
+
+    getContext(type) {
+      return this.canvas.getContext(type)
+    }
+  }
+}
+
+const { scheduleTemplate } = await import('./src/template/scheduleTemplate.js')
 
 const outputDir = path.resolve('./dist')
 const outputDataDir = path.resolve(outputDir, 'data')
