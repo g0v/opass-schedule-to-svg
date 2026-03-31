@@ -190,6 +190,7 @@ export function getSessionLayout(session, speakerList, config, y) {
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
   const baseHeight = Number(config.rowHeight) || 0
   const speakerConfig = config.sessionBlock.speaker
+  const sessionYPadding = getSessionVerticalPadding(config)
   const yPadding = Number(speakerConfig.yPadding) || 0
   const { blockHeight } = getSpeakerMetrics(speakerConfig, speakers.length)
   const speakerHeight = speakers.length > 0 ? blockHeight + yPadding * 2 : 0
@@ -197,7 +198,7 @@ export function getSessionLayout(session, speakerList, config, y) {
 
   return {
     y,
-    height: Math.max(baseHeight, speakerHeight, titleLayout.blockHeight),
+    height: Math.max(baseHeight, speakerHeight, titleLayout.blockHeight) + sessionYPadding * 2,
     titleLayout,
   }
 }
@@ -277,6 +278,10 @@ function getTitleMaxWidth(config) {
   const rightPadding = Number(sessionBlock.titleRightPadding) || 24
 
   return Math.max(speakerLeft - titleLeft - rightPadding, 80)
+}
+
+function getSessionVerticalPadding(config) {
+  return Number(config.sessionBlock?.yPadding) || 12
 }
 
 function wrapTextWithPretext(text, style, maxWidth) {
