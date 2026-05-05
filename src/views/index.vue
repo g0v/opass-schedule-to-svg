@@ -102,6 +102,9 @@ function processSchedule(schedule, name) {
   if (!rooms.value.includes(selectedRoom.value)) selectedRoom.value = rooms.value[0] || ''
 }
 
+const lastFetchedJsonUrl = ref('')
+const lastFetchedStyleUrl = ref('')
+
 async function fetchJson() {
   if (!inputJsonUrl.value) return
   try {
@@ -109,6 +112,7 @@ async function fetchJson() {
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
     const schedule = await res.json()
     processSchedule(schedule, inputJsonUrl.value.substring(inputJsonUrl.value.lastIndexOf('/') + 1) || inputJsonUrl.value)
+    lastFetchedJsonUrl.value = inputJsonUrl.value
   } catch (e) {
     alert('Failed to fetch JSON: ' + e.message)
   }
@@ -138,9 +142,24 @@ async function fetchStyle() {
     const config = await res.json()
     dynamicStyleConfig.value = config
     loadedStyleName.value = inputStyleUrl.value.substring(inputStyleUrl.value.lastIndexOf('/') + 1) || inputStyleUrl.value
+    lastFetchedStyleUrl.value = inputStyleUrl.value
   } catch (e) {
     alert('Failed to fetch Style config: ' + e.message)
   }
+}
+
+async function handleDone() {
+  const promises = []
+  if (inputJsonUrl.value && inputJsonUrl.value !== lastFetchedJsonUrl.value) {
+    promises.push(fetchJson())
+  }
+  if (inputStyleUrl.value && inputStyleUrl.value !== lastFetchedStyleUrl.value) {
+    promises.push(fetchStyle())
+  }
+  if (promises.length > 0) {
+    await Promise.allSettled(promises)
+  }
+  showUploadUI.value = false
 }
 
 function importStyleJson(event) {
@@ -357,7 +376,7 @@ function download() {
       </div>
       
       <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
-        <button @click="showUploadUI = false" class="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 transition-colors">
+        <button @click="handleDone" class="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 transition-colors">
           Done & Preview
         </button>
       </div>
