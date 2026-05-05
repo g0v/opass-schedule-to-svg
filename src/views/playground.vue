@@ -47,26 +47,37 @@ const mockSessions = [
 
 // Default Config (loaded from style.config.json initially)
 let defaultConfig = {}
+let baseConfig = {} // The 'reset target': user's uploaded style or system default (never working edits)
 const config = ref(null)
 let initialConfigStr = ''
 const svgHtml = ref('')
 
 // Load initial config
 onMounted(async () => {
-  // Priority: working config (user's last edits) > homepage style > fetched > fallback
-  if (globalStore.playgroundWorkingConfig) {
-    defaultConfig = JSON.parse(JSON.stringify(globalStore.playgroundWorkingConfig))
+  // baseConfig = the explicit user baseline (uploaded/fetched), NOT working edits
+  // Persist it on first visit so it survives homepage confirm-sync
+  if (globalStore.playgroundBaseConfig) {
+    baseConfig = JSON.parse(JSON.stringify(globalStore.playgroundBaseConfig))
   } else if (globalStore.dynamicStyleConfig) {
-    defaultConfig = JSON.parse(JSON.stringify(globalStore.dynamicStyleConfig))
+    baseConfig = JSON.parse(JSON.stringify(globalStore.dynamicStyleConfig))
+    globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(baseConfig)) // persist immediately
   } else {
     try {
       const res = await fetch('./data/style.config.json')
       if (!res.ok) throw new Error()
-      defaultConfig = await res.json()
+      baseConfig = await res.json()
     } catch (e) {
       console.warn('Failed to load config from fetch, using fallback')
-      defaultConfig = JSON.parse(JSON.stringify(fallbackConfig))
+      baseConfig = JSON.parse(JSON.stringify(fallbackConfig))
     }
+    globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(baseConfig)) // persist immediately
+  }
+
+  // defaultConfig = what we actually load (could be user's last edits)
+  if (globalStore.playgroundWorkingConfig) {
+    defaultConfig = JSON.parse(JSON.stringify(globalStore.playgroundWorkingConfig))
+  } else {
+    defaultConfig = JSON.parse(JSON.stringify(baseConfig))
   }
   
   try {
@@ -157,6 +168,9 @@ const importConfig = event => {
       }
 
       config.value = imported
+      // Update the base config so reset goes back to THIS uploaded file
+      globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(imported))
+      baseConfig = JSON.parse(JSON.stringify(imported))
       console.log('Config imported successfully')
       // Clear the value so the same file can be imported again
       event.target.value = ''
@@ -171,7 +185,9 @@ const importConfig = event => {
 
 const resetConfig = () => {
   if (!confirm('確定要重置所有設定嗎？')) return
-  config.value = JSON.parse(JSON.stringify(defaultConfig))
+  config.value = JSON.parse(JSON.stringify(baseConfig))
+  // Clear working config so next visit also starts from base
+  globalStore.playgroundWorkingConfig = null
 }
 
 const resetKeys = paths => {
@@ -182,7 +198,7 @@ const resetKeys = paths => {
   paths.forEach(path => {
     const parts = path.split('.')
     let current = config.value
-    let source = defaultConfig
+    let source = baseConfig
 
     // Navigate to parent of the target key
     let valid = true

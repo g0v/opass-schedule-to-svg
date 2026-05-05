@@ -6,6 +6,7 @@ export const globalStore = reactive({
   dynamicStyleConfig: null,
   playgroundDraftStyle: null,
   playgroundWorkingConfig: null,
+  playgroundBaseConfig: null, // The user's explicitly uploaded/fetched style (reset target)
   loadedScheduleName: '預設資料',
   loadedStyleName: '預設樣式',
   inputJsonUrl: '',

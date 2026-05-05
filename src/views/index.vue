@@ -25,14 +25,13 @@ onMounted(async () => {
     if (confirm('偵測到您在 Playground 修改了樣式，是否要套用至首頁？')) {
       dynamicStyleConfig.value = JSON.parse(JSON.stringify(globalStore.playgroundDraftStyle))
       loadedStyleName.value = '來自 Playground 修改'
-      // 同步後清除 working config，讓 Playground 下次以首頁樣式為基準重新出發
-      globalStore.playgroundWorkingConfig = null
     }
     // 清除草稿避免重複詢問
     globalStore.playgroundDraftStyle = null
   }
 
   if (dates.value.length > 0 || dynamicSchedule.value) {
+    showUploadUI.value = false
     return // Already loaded from store
   }
   try {
