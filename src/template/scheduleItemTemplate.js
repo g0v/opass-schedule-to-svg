@@ -324,15 +324,9 @@ function normalizeTextStyle(style) {
 }
 
 function normalizeFontFamily(fontFamily) {
-  if (/Onest-Regular_|'Onest'|\bOnest\b/i.test(fontFamily)) {
-    return "'Liberation Sans', Arial, sans-serif"
-  }
-
-  if (/NotoSansTC-Regular|'Noto Sans TC'|\bNoto Sans TC\b/i.test(fontFamily)) {
-    return "'Noto Sans CJK TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif"
-  }
-
-  return fontFamily
+  if (!fontFamily) return ''
+  // 提取逗號分隔的第一個字體選項，避免向量軟體匯入時出錯
+  return fontFamily.split(',')[0].trim()
 }
 
 function replaceStyleValue(style, property, nextValue) {
