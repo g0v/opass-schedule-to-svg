@@ -25,6 +25,8 @@ onMounted(async () => {
     if (confirm('偵測到您在 Playground 修改了樣式，是否要套用至首頁？')) {
       dynamicStyleConfig.value = JSON.parse(JSON.stringify(globalStore.playgroundDraftStyle))
       loadedStyleName.value = '來自 Playground 修改'
+      // 同步後清除 working config，讓 Playground 下次以首頁樣式為基準重新出發
+      globalStore.playgroundWorkingConfig = null
     }
     // 清除草稿避免重複詢問
     globalStore.playgroundDraftStyle = null
@@ -49,9 +51,9 @@ onMounted(async () => {
       rooms.value.sort()
     }
     if (configRes.status === 'fulfilled') {
-      dynamicStyleConfig.value = configRes.value
+      if (!dynamicStyleConfig.value) dynamicStyleConfig.value = configRes.value
     } else {
-      dynamicStyleConfig.value = fallbackConfig
+      if (!dynamicStyleConfig.value) dynamicStyleConfig.value = fallbackConfig
     }
 
     if (dates.value.length === 0) {
@@ -61,7 +63,7 @@ onMounted(async () => {
   } catch (e) {
     console.error('Failed to load initial data:', e)
     showUploadUI.value = true
-    dynamicStyleConfig.value = fallbackConfig
+    if (!dynamicStyleConfig.value) dynamicStyleConfig.value = fallbackConfig
     loadedScheduleName.value = '無'
   }
 })

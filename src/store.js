@@ -5,6 +5,7 @@ export const globalStore = reactive({
   dynamicSchedule: null,
   dynamicStyleConfig: null,
   playgroundDraftStyle: null,
+  playgroundWorkingConfig: null,
   loadedScheduleName: '預設資料',
   loadedStyleName: '預設樣式',
   inputJsonUrl: '',

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { stringify } from 'svgson'
 import { scheduleTemplate } from '~/template/scheduleTemplate.js'
 import StyleInput from '~/components/StyleInput.vue'
@@ -53,7 +53,10 @@ const svgHtml = ref('')
 
 // Load initial config
 onMounted(async () => {
-  if (globalStore.dynamicStyleConfig) {
+  // Priority: working config (user's last edits) > homepage style > fetched > fallback
+  if (globalStore.playgroundWorkingConfig) {
+    defaultConfig = JSON.parse(JSON.stringify(globalStore.playgroundWorkingConfig))
+  } else if (globalStore.dynamicStyleConfig) {
     defaultConfig = JSON.parse(JSON.stringify(globalStore.dynamicStyleConfig))
   } else {
     try {
@@ -101,12 +104,21 @@ watch(
       } else {
         globalStore.playgroundDraftStyle = null
       }
+      // Always persist working config so user can return to their edits
+      globalStore.playgroundWorkingConfig = JSON.parse(JSON.stringify(config.value))
     } catch (e) {
       console.error('Render error:', e)
     }
   },
   { deep: true }
 )
+
+// Guarantee saving working config when user navigates away (belt & suspenders with the watch)
+onBeforeUnmount(() => {
+  if (config.value) {
+    globalStore.playgroundWorkingConfig = JSON.parse(JSON.stringify(config.value))
+  }
+})
 
 const downloadConfig = () => {
   const blob = new Blob([JSON.stringify(config.value, null, 2)], { type: 'application/json' })
