@@ -185,7 +185,7 @@ const resetKeys = paths => {
   })
 }
 
-const fontOptions = [
+const defaultFontOptions = [
   { label: 'Liberation Sans / Arial', value: "'Liberation Sans', Arial, sans-serif" },
   { label: '思源黑體', value: "'NotoSansTC-Regular', 'Noto Sans TC', sans-serif" },
   { label: '思源宋體', value: "'Noto Serif TC', serif" },
@@ -197,6 +197,96 @@ const fontOptions = [
   { label: '等寬字型', value: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' },
   { label: '系統預設介面字型', value: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" },
 ]
+
+const fontOptions = ref([...defaultFontOptions])
+
+const useLocalFonts = ref(false)
+const isLocalFontsBlocked = ref(false)
+
+onMounted(async () => {
+  if ('permissions' in navigator && 'query' in navigator.permissions) {
+    try {
+      const p = await navigator.permissions.query({ name: 'local-fonts' })
+      isLocalFontsBlocked.value = p.state === 'denied'
+      p.onchange = () => {
+        isLocalFontsBlocked.value = p.state === 'denied'
+        if (p.state !== 'granted') {
+          useLocalFonts.value = false
+          fontOptions.value = [...defaultFontOptions]
+          localStorage.setItem('opass_use_local_fonts', 'false')
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  if (localStorage.getItem('opass_use_local_fonts') === 'true' && !isLocalFontsBlocked.value) {
+    await performLoadLocalFonts(true)
+  }
+})
+const toggleLocalFonts = async () => {
+  if (useLocalFonts.value) {
+    useLocalFonts.value = false
+    fontOptions.value = [...defaultFontOptions]
+    localStorage.setItem('opass_use_local_fonts', 'false')
+    return
+  }
+
+  if (!('queryLocalFonts' in window)) {
+    alert('您的瀏覽器不支援讀取本機字型功能。請使用最新版的 Chrome 或 Edge。')
+    return
+  }
+
+  await performLoadLocalFonts(false)
+}
+
+const performLoadLocalFonts = async (isAutoLoad = false) => {
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      try {
+        const permission = await navigator.permissions.query({ name: 'local-fonts' })
+        if (permission.state === 'denied') {
+          isLocalFontsBlocked.value = true
+          if (!isAutoLoad) alert('您已經拒絕存取本機字型，請至瀏覽器網址列左側的設定中開啟權限。')
+          return
+        }
+        if (isAutoLoad && permission.state !== 'granted') {
+          return // 防止自動載入時觸發瀏覽器視窗干擾使用者
+        }
+      } catch (e) {
+        if (isAutoLoad) return
+      }
+    } else if (isAutoLoad) {
+      return
+    }
+
+    const fonts = await window.queryLocalFonts()
+    if (!fonts || fonts.length === 0) {
+      return
+    }
+
+    const uniqueFonts = new Set()
+    const localFontOptions = []
+
+    fonts.forEach(font => {
+      if (!uniqueFonts.has(font.family)) {
+        uniqueFonts.add(font.family)
+        localFontOptions.push({
+          label: `本機: ${font.family}`,
+          value: `'${font.family}'`,
+        })
+      }
+    })
+
+    fontOptions.value = [...defaultFontOptions, { label: '--- 以下為本機字型 ---', value: '', disabled: true }, ...localFontOptions]
+    useLocalFonts.value = true
+    localStorage.setItem('opass_use_local_fonts', 'true')
+  } catch (err) {
+    if (!isAutoLoad) alert('讀取本機字型失敗：可能是因為尚未取得權限，請確認瀏覽器提示。')
+    console.error(err)
+  }
+}
 
 const weightOptions = [
   { label: '100 - Thin', value: '100' },
@@ -259,6 +349,29 @@ const weightOptions = [
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </button>
+        </div>
+
+        <!-- Load Local Fonts Toggle -->
+        <div class="relative mt-4">
+          <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3" :class="{ 'opacity-40': isLocalFontsBlocked }">
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-gray-700">使用本機字型</span>
+              <span class="mt-0.5 text-xs text-gray-500">在下拉選單中顯示本機字型 (需授權)</span>
+            </div>
+            <div class="cursor-pointer" @click.capture.stop.prevent="toggleLocalFonts">
+              <InputCheckbox :modelValue="useLocalFonts" style="pointer-events: none" />
+            </div>
+          </div>
+          
+          <!-- Blocked Overlay -->
+          <div v-if="isLocalFontsBlocked" class="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/40 backdrop-blur-[2px]">
+            <div class="flex items-center gap-2 rounded-full bg-slate-800/90 px-4 py-2 text-white shadow-xl backdrop-blur-sm">
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="text-xs font-medium tracking-wide">請至網址列重新開啟字型權限</span>
+            </div>
+          </div>
         </div>
       </div>
 

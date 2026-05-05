@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import InputSelectSearch from './Form/InputSelectSearch.vue'
 
 const props = defineProps(['obj', 'prop', 'unit', 'type', 'label', 'min', 'max', 'step', 'options'])
 
@@ -39,9 +40,7 @@ const value = computed({
     <span class="shrink-0 text-sm text-gray-600">{{ label }}</span>
     <div class="flex items-center justify-end gap-2" :style="type === 'select' ? 'flex: 1' : ''">
       <input v-if="type === 'range'" type="range" :min="min" :max="max" :step="step" v-model="value" />
-      <select v-if="type === 'select'" v-model="value" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem">
-        <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
+      <InputSelectSearch v-if="type === 'select'" v-model="value" :options="options" :searchable="prop === 'font-family'" />
       <input v-if="type !== 'select'" :type="type === 'color' ? 'color' : type === 'range' ? 'number' : 'text'" :step="step" v-model="value" :style="type === 'color' ? '' : ''" />
       <input v-if="type === 'color'" type="text" v-model="value" style="width: 70px" />
     </div>
