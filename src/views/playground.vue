@@ -48,6 +48,7 @@ const mockSessions = [
 // Default Config (loaded from style.config.json initially)
 let defaultConfig = {}
 const config = ref(null)
+let initialConfigStr = ''
 const svgHtml = ref('')
 
 // Load initial config
@@ -77,6 +78,7 @@ onMounted(async () => {
     }
 
     config.value = JSON.parse(JSON.stringify(defaultConfig))
+    initialConfigStr = JSON.stringify(config.value)
   } catch (e) {
     console.error('Failed to load config', e)
   }
@@ -92,8 +94,13 @@ watch(
       const svgObj = scheduleTemplate(mockSchedule, mockSessions, config.value)
       // Convert to String using svgson (loaded via UMD script tag)
       svgHtml.value = stringify(svgObj)
-      // Save back to global store draft so we can prompt user on homepage
-      globalStore.playgroundDraftStyle = JSON.parse(JSON.stringify(config.value))
+      
+      // Save back to global store draft so we can prompt user on homepage ONLY if actually changed
+      if (initialConfigStr && JSON.stringify(config.value) !== initialConfigStr) {
+        globalStore.playgroundDraftStyle = JSON.parse(JSON.stringify(config.value))
+      } else {
+        globalStore.playgroundDraftStyle = null
+      }
     } catch (e) {
       console.error('Render error:', e)
     }
