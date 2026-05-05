@@ -190,6 +190,15 @@ const resetConfig = () => {
   globalStore.playgroundWorkingConfig = null
 }
 
+const syncFromHomepage = () => {
+  if (!globalStore.dynamicStyleConfig) {
+    alert('首頁目前沒有自訂樣式可供同步。')
+    return
+  }
+  if (!confirm('將會套用目前首頁正在使用的樣式，確定要覆蓋目前的編輯嗎？')) return
+  config.value = JSON.parse(JSON.stringify(globalStore.dynamicStyleConfig))
+}
+
 const resetKeys = paths => {
   // Check if confirm is needed or make it subtle. User requested icon, usually means quick reset.
   // But to be safe, confirm is good.
@@ -341,10 +350,15 @@ const weightOptions = [
     <div class="z-10 flex h-screen shrink-0 flex-col gap-6 overflow-y-auto border border-slate-300 p-6 shadow-xl" style="width: 400px">
       <div>
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-xl font-bold text-gray-900">SVG Playground</h2>
-          <RouterLink to="/">
-            <button class="btn text-xs">回首頁</button>
-          </RouterLink>
+          <div class="flex items-center gap-3">
+            <RouterLink to="/" class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-gray-500 transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-gray-900 active:scale-95 shadow-sm" title="返回首頁">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </RouterLink>
+            <h2 class="text-xl font-bold text-gray-900">SVG Playground</h2>
+          </div>
+          <button class="btn text-xs" @click="syncFromHomepage" :disabled="!globalStore.dynamicStyleConfig" title="同步首頁目前的樣式">同步首頁</button>
         </div>
         <div class="grid grid-cols-4 gap-2">
           <!-- Download Config (Style) -->
