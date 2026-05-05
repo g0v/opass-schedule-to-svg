@@ -1,10 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, watch, toRefs } from 'vue'
 import { stringify } from 'svgson'
+import JSZip from 'jszip'
 import { scheduleTemplate } from '~/template/scheduleTemplate.js'
 import { formatDate } from '../../utils/formatDate.js'
 import fallbackConfig from '../../style.config.json'
 import { globalStore } from '../store.js'
+
+const isZipping = ref(false)
 
 const {
   dates, rooms, selectedDate, selectedRoom,
@@ -155,6 +158,61 @@ function importStyleJson(event) {
     event.target.value = ''
   }
   reader.readAsText(file)
+}
+async function downloadAll() {
+  if (isZipping.value) return
+  isZipping.value = true
+  
+  try {
+    const zip = new JSZip()
+    
+    // Add style config
+    if (dynamicStyleConfig.value) {
+      zip.file('style.config.json', JSON.stringify(dynamicStyleConfig.value, null, 2))
+    }
+    
+    // Iterate and add SVGs
+    if (dynamicSchedule.value) {
+      for (const date of dates.value) {
+        for (const room of rooms.value) {
+          const sessions = dynamicSchedule.value.sessions.filter(s => formatDate(s.start) === date && s.room === room)
+          if (sessions.length > 0) {
+            const sortedSessions = sessions.sort((a, b) => new Date(a.start) - new Date(b.start))
+            const svgObj = scheduleTemplate(dynamicSchedule.value, sortedSessions, dynamicStyleConfig.value)
+            const svgString = stringify(svgObj)
+            zip.file(`${date}-${room}.svg`, svgString)
+          }
+        }
+      }
+    } else {
+      const fetchPromises = []
+      for (const date of dates.value) {
+        for (const room of rooms.value) {
+          fetchPromises.push(
+            fetch(`./data/${date}-${room}.svg`)
+              .then(res => {
+                if (res.ok) return res.text().then(text => zip.file(`${date}-${room}.svg`, text))
+              })
+              .catch(() => {}) // Ignore missing files
+          )
+        }
+      }
+      await Promise.all(fetchPromises)
+    }
+
+    const content = await zip.generateAsync({ type: 'blob' })
+    const url = URL.createObjectURL(content)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'opass-schedules.zip'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Failed to generate zip:', error)
+    alert('打包失敗：' + error.message)
+  } finally {
+    isZipping.value = false
+  }
 }
 
 function download() {
@@ -335,7 +393,22 @@ function download() {
             </div>
           </div>
 
-          <div class="flex items-end self-end shrink-0">
+          <div class="flex items-end self-end shrink-0 gap-3">
+            <button 
+              v-if="dates.length > 0" 
+              @click="downloadAll" 
+              :disabled="isZipping"
+              class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 transition-all hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-75 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-md"
+            >
+              <svg v-if="!isZipping" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+              </svg>
+              <svg v-else class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ isZipping ? '打包中...' : 'Download All' }}
+            </button>
             <button 
               v-if="hasDateAndRoom" 
               @click="download" 
