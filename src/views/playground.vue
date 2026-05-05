@@ -10,6 +10,7 @@ import InputText from '~/components/Form/InputText.vue'
 import InputColor from '~/components/Form/InputColor.vue'
 import InputCheckbox from '~/components/Form/InputCheckbox.vue'
 import InputTextarea from '~/components/Form/InputTextarea.vue'
+import InputBorderSides from '~/components/Form/InputBorderSides.vue'
 import fallbackConfig from '../../style.config.json'
 import { globalStore } from '../store.js'
 
@@ -88,6 +89,9 @@ onMounted(async () => {
       }
       if (defaultConfig.sessionBlock.speaker && defaultConfig.sessionBlock.speaker.style === undefined) {
         defaultConfig.sessionBlock.speaker.style = ''
+      }
+      if (defaultConfig.sessionBlock.background && !defaultConfig.sessionBlock.background.borderSides) {
+        defaultConfig.sessionBlock.background.borderSides = ['top', 'bottom', 'left', 'right']
       }
     }
 
@@ -445,6 +449,9 @@ const weightOptions = [
         <Control title="邊框顏色">
           <InputColor v-model="config.sessionBlock.background.stroke" />
           <InputText v-model="config.sessionBlock.background.stroke" />
+        </Control>
+        <Control title="邊框顯示">
+          <InputBorderSides v-model="config.sessionBlock.background.borderSides" />
         </Control>
       </ControlGroup>
 

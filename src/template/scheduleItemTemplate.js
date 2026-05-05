@@ -29,11 +29,48 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
           y: layout.y,
           width: svgWidth,
           height: layout.height,
-          stroke: sessionBlock.background.stroke,
+          stroke: sessionBlock.background.borderSides && sessionBlock.background.borderSides.length === 4 ? sessionBlock.background.stroke : 'none',
           fill: sessionBlock.background.fill,
         },
         children: [],
       },
+      ...(sessionBlock.background.borderSides && sessionBlock.background.borderSides.length < 4
+        ? sessionBlock.background.borderSides.map(side => {
+            const attributes = {
+              stroke: sessionBlock.background.stroke,
+              'stroke-width': 1, // Default stroke width
+            }
+            if (side === 'top') {
+              attributes.x1 = 0
+              attributes.y1 = layout.y
+              attributes.x2 = svgWidth
+              attributes.y2 = layout.y
+            } else if (side === 'bottom') {
+              attributes.x1 = 0
+              attributes.y1 = layout.y + layout.height
+              attributes.x2 = svgWidth
+              attributes.y2 = layout.y + layout.height
+            } else if (side === 'left') {
+              attributes.x1 = 0
+              attributes.y1 = layout.y
+              attributes.x2 = 0
+              attributes.y2 = layout.y + layout.height
+            } else if (side === 'right') {
+              attributes.x1 = svgWidth
+              attributes.y1 = layout.y
+              attributes.x2 = svgWidth
+              attributes.y2 = layout.y + layout.height
+            }
+            return {
+              name: 'line',
+              type: 'element',
+              value: '',
+              parent: null,
+              attributes,
+              children: [],
+            }
+          })
+        : []),
       ...(sessionBlock.timeBadge.show !== false
         ? [
             {

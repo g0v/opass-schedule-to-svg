@@ -6,7 +6,8 @@
   "sessionBlock": {
     "background": {
       "fill": "#ffffff",
-      "stroke": "#000000"
+      "stroke": "#000000",
+      "borderSides": ["top", "bottom", "left", "right"]
     },
     "timeBadge": {
       "x": "45.1",
