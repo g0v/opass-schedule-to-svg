@@ -11,6 +11,7 @@ import InputColor from '~/components/Form/InputColor.vue'
 import InputCheckbox from '~/components/Form/InputCheckbox.vue'
 import InputTextarea from '~/components/Form/InputTextarea.vue'
 import InputBorderSides from '~/components/Form/InputBorderSides.vue'
+import InputCorners from '~/components/Form/InputCorners.vue'
 import fallbackConfig from '../../style.config.json'
 import { globalStore } from '../store.js'
 
@@ -92,6 +93,10 @@ onMounted(async () => {
       }
       if (defaultConfig.sessionBlock.background && !defaultConfig.sessionBlock.background.borderSides) {
         defaultConfig.sessionBlock.background.borderSides = ['top', 'bottom', 'left', 'right']
+      }
+      if (defaultConfig.sessionBlock.timeBadge) {
+        if (defaultConfig.sessionBlock.timeBadge.yOffset === undefined) defaultConfig.sessionBlock.timeBadge.yOffset = 0
+        if (defaultConfig.sessionBlock.timeBadge.roundedCorners === undefined) defaultConfig.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
       }
     }
 
@@ -470,6 +475,10 @@ const weightOptions = [
             <InputRange :min="0" :max="500" :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
             <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
           </Control>
+          <Control title="Y 偏移">
+            <InputRange :min="-100" :max="100" :step="1" v-model.number="config.sessionBlock.timeBadge.yOffset" />
+            <InputText isNumber v-model.number="config.sessionBlock.timeBadge.yOffset" />
+          </Control>
           <Control title="寬度">
             <InputRange :min="10" :max="300" :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
             <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
@@ -477,6 +486,9 @@ const weightOptions = [
           <Control title="高度">
             <InputRange :min="10" :max="100" :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
             <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
+          </Control>
+          <Control title="圓角位置">
+            <InputCorners v-model="config.sessionBlock.timeBadge.roundedCorners" />
           </Control>
           <Control title="圓角 RX">
             <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.timeBadge.rx" />
@@ -487,6 +499,13 @@ const weightOptions = [
             <InputText isNumber v-model.number="config.sessionBlock.timeBadge.ry" />
           </Control>
         </template>
+        <div class="mt-4 border-t border-slate-100 pt-4">
+          <h4 class="mb-3 shrink-0 text-sm font-bold text-gray-600">時間</h4>
+          <StyleInput :obj="config.sessionBlock.timeText" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+          <StyleInput :obj="config.sessionBlock.timeText" prop="fill" type="color" label="文字顏色" />
+          <StyleInput :obj="config.sessionBlock.timeText" prop="font-family" type="select" :options="fontOptions" label="字型" />
+          <StyleInput :obj="config.sessionBlock.timeText" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+        </div>
       </ControlGroup>
 
       <!-- Session Title Section -->

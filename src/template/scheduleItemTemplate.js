@@ -73,22 +73,27 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
         : []),
       ...(sessionBlock.timeBadge.show !== false
         ? [
-            {
-              name: 'rect',
-              type: 'element',
-              value: '',
-              parent: null,
-              attributes: {
-                x: sessionBlock.timeBadge.x,
-                y: layout.y + (layout.height - sessionBlock.timeBadge.height) / 2,
-                width: sessionBlock.timeBadge.width,
-                height: sessionBlock.timeBadge.height,
-                rx: sessionBlock.timeBadge.rx,
-                ry: sessionBlock.timeBadge.ry,
-                fill: sessionBlock.timeBadge.fill,
-              },
-              children: [],
-            },
+            (() => {
+              const x = parseFloat(sessionBlock.timeBadge.x)
+              const y = layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + (sessionBlock.timeBadge.yOffset || 0)
+              const w = parseFloat(sessionBlock.timeBadge.width)
+              const h = parseFloat(sessionBlock.timeBadge.height)
+              const rx = parseFloat(sessionBlock.timeBadge.rx) || 0
+              const ry = parseFloat(sessionBlock.timeBadge.ry) || rx
+              const corners = sessionBlock.timeBadge.roundedCorners || ['tl', 'tr', 'br', 'bl']
+
+              return {
+                name: 'path',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  d: generateRoundedRectPath(x, y, w, h, rx, ry, corners),
+                  fill: sessionBlock.timeBadge.fill,
+                },
+                children: [],
+              }
+            })(),
           ]
         : []),
       {
@@ -109,7 +114,7 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
             const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24
             const baselineOffset = fontSize * 0.35
 
-            return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0)
+            return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0) + (sessionBlock.timeBadge.yOffset || 0)
           })(),
           class: 'time',
           'text-anchor': 'middle',
@@ -215,6 +220,26 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
       },
     ],
   }
+}
+
+function generateRoundedRectPath(x, y, w, h, rx, ry, corners) {
+  const rTL = corners.includes('tl') ? rx : 0
+  const rTR = corners.includes('tr') ? rx : 0
+  const rBR = corners.includes('br') ? rx : 0
+  const rBL = corners.includes('bl') ? rx : 0
+
+  return [
+    `M ${x + rTL},${y}`,
+    `H ${x + w - rTR}`,
+    rTR > 0 ? `A ${rTR},${ry} 0 0 1 ${x + w},${y + ry}` : `V ${y}`,
+    `V ${y + h - rBR}`,
+    rBR > 0 ? `A ${rBR},${ry} 0 0 1 ${x + w - rBR},${y + h}` : `H ${x + w}`,
+    `H ${x + rBL}`,
+    rBL > 0 ? `A ${rBL},${ry} 0 0 1 ${x},${y + h - ry}` : `V ${y + h}`,
+    `V ${y + rTL}`,
+    rTL > 0 ? `A ${rTL},${ry} 0 0 1 ${x + rTL},${y}` : '',
+    'Z',
+  ].join(' ')
 }
 
 function getSpeakerY(rowTop, rowHeight, speakerConfig, speakerCount, lineIndex = 0) {

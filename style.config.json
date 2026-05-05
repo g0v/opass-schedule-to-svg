@@ -13,6 +13,8 @@
       "x": "45.1",
       "width": "101.3",
       "height": "36.8",
+      "yOffset": 0,
+      "roundedCorners": ["tl", "tr", "br", "bl"],
       "rx": "10",
       "ry": "10",
       "fill": "#8DA4BE"
