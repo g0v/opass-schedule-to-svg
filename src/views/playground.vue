@@ -10,6 +10,8 @@ import InputText from '~/components/Form/InputText.vue'
 import InputColor from '~/components/Form/InputColor.vue'
 import InputCheckbox from '~/components/Form/InputCheckbox.vue'
 import InputTextarea from '~/components/Form/InputTextarea.vue'
+import fallbackConfig from '../../style.config.json'
+import { globalStore } from '../store.js'
 
 // Mock Data
 const mockSchedule = {
@@ -50,10 +52,20 @@ const svgHtml = ref('')
 
 // Load initial config
 onMounted(async () => {
+  if (globalStore.dynamicStyleConfig) {
+    defaultConfig = JSON.parse(JSON.stringify(globalStore.dynamicStyleConfig))
+  } else {
+    try {
+      const res = await fetch('./data/style.config.json')
+      if (!res.ok) throw new Error()
+      defaultConfig = await res.json()
+    } catch (e) {
+      console.warn('Failed to load config from fetch, using fallback')
+      defaultConfig = JSON.parse(JSON.stringify(fallbackConfig))
+    }
+  }
+  
   try {
-    const res = await fetch('./data/style.config.json')
-    defaultConfig = await res.json()
-
     // Ensure defaults for backward compatibility
     if (defaultConfig.sessionBlock) {
       if (defaultConfig.sessionBlock.timeBadge && defaultConfig.sessionBlock.timeBadge.show === undefined) {
@@ -80,6 +92,8 @@ watch(
       const svgObj = scheduleTemplate(mockSchedule, mockSessions, config.value)
       // Convert to String using svgson (loaded via UMD script tag)
       svgHtml.value = stringify(svgObj)
+      // Save back to global store draft so we can prompt user on homepage
+      globalStore.playgroundDraftStyle = JSON.parse(JSON.stringify(config.value))
     } catch (e) {
       console.error('Render error:', e)
     }

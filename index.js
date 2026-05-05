@@ -34,8 +34,14 @@ if (process.env.GCP_API_KEY && process.env.SPREADSHEET_ID) {
   })
 } else {
   console.warn('⚠️  Missing GCP_API_KEY or SPREADSHEET_ID. Fetching production data for local testing...')
-  const res = await fetch('https://g0v.github.io/opass-schedule-to-svg/schedule.json')
-  schedule = JSON.parse(await res.text())
+  try {
+    const res = await fetch('https://g0v.github.io/opass-schedule-to-svg/schedule.json')
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+    schedule = JSON.parse(await res.text())
+  } catch (e) {
+    console.error('⚠️  Failed to fetch fallback data. Using empty schedule.', e.message)
+    schedule = { sessions: [], speakers: [] }
+  }
 }
 
 const [dates, rooms] = getDatesAndRooms(schedule)
