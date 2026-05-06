@@ -16,7 +16,7 @@
 
 ### 1. 安裝依賴
 
-本專案使用 Node.js v22 以上版本。
+本專案使用 Node.js v24 以上版本。
 
 ```bash
 npm install
