@@ -15,7 +15,7 @@ const sides = [
   { id: 'right', icon: 'M18 4v16', label: '右' },
 ]
 
-const toggleSide = (id) => {
+const toggleSide = id => {
   const newValue = [...props.modelValue]
   const index = newValue.indexOf(id)
   if (index > -1) {
@@ -26,7 +26,7 @@ const toggleSide = (id) => {
   emit('update:modelValue', newValue)
 }
 
-const isActive = (id) => props.modelValue.includes(id)
+const isActive = id => props.modelValue.includes(id)
 </script>
 
 <template>
@@ -37,9 +37,7 @@ const isActive = (id) => props.modelValue.includes(id)
       type="button"
       @click="toggleSide(side.id)"
       class="flex h-8 w-8 items-center justify-center rounded border transition-all"
-      :class="[
-        isActive(side.id) ? 'active-side shadow-sm' : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600',
-      ]"
+      :class="[isActive(side.id) ? 'active-side shadow-sm' : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600']"
       :title="`顯示${side.label}邊框`"
     >
       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">

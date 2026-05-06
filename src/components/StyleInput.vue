@@ -51,7 +51,13 @@ const value = computed({
       <input v-if="type === 'range'" type="range" :min="min" :max="max" :step="step" v-model="value" />
       <InputSelectSearch v-if="type === 'select'" v-model="value" :options="options" :searchable="prop === 'font-family'" />
       <InputBorderSides v-if="type === 'border-sides'" v-model="value" />
-      <input v-if="type !== 'select' && type !== 'border-sides'" :type="type === 'color' ? 'color' : type === 'range' ? 'number' : 'text'" :step="step" v-model="value" :style="type === 'color' ? '' : ''" />
+      <input
+        v-if="type !== 'select' && type !== 'border-sides'"
+        :type="type === 'color' ? 'color' : type === 'range' ? 'number' : 'text'"
+        :step="step"
+        v-model="value"
+        :style="type === 'color' ? '' : ''"
+      />
       <input v-if="type === 'color'" type="text" v-model="value" style="width: 70px" />
     </div>
   </div>

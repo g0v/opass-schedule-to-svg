@@ -81,7 +81,7 @@ onMounted(async () => {
   } else {
     defaultConfig = JSON.parse(JSON.stringify(baseConfig))
   }
-  
+
   try {
     // Ensure defaults for backward compatibility
     if (defaultConfig.sessionBlock) {
@@ -117,7 +117,7 @@ watch(
       const svgObj = scheduleTemplate(mockSchedule, mockSessions, config.value)
       // Convert to String using svgson (loaded via UMD script tag)
       svgHtml.value = stringify(svgObj)
-      
+
       // Save back to global store draft so we can prompt user on homepage ONLY if actually changed
       if (initialConfigStr && JSON.stringify(config.value) !== initialConfigStr) {
         globalStore.playgroundDraftStyle = JSON.parse(JSON.stringify(config.value))
@@ -360,7 +360,11 @@ const weightOptions = [
       <div>
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <RouterLink to="/" class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-gray-500 transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-gray-900 active:scale-95 shadow-sm" title="返回首頁">
+            <RouterLink
+              to="/"
+              class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-gray-500 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-gray-900 active:scale-95"
+              title="返回首頁"
+            >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
@@ -420,12 +424,16 @@ const weightOptions = [
               <InputCheckbox :modelValue="useLocalFonts" style="pointer-events: none" />
             </div>
           </div>
-          
+
           <!-- Blocked Overlay -->
           <div v-if="isLocalFontsBlocked" class="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/40 backdrop-blur-[2px]">
             <div class="flex items-center gap-2 rounded-full bg-slate-800/90 px-4 py-2 text-white shadow-xl backdrop-blur-sm">
-              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
               <span class="text-xs font-medium tracking-wide">請至網址列重新開啟字型權限</span>
             </div>

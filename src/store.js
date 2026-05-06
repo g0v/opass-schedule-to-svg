@@ -15,5 +15,5 @@ export const globalStore = reactive({
   dates: [],
   rooms: [],
   selectedDate: '',
-  selectedRoom: ''
+  selectedRoom: '',
 })

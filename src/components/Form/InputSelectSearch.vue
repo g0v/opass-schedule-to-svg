@@ -69,7 +69,7 @@ onBeforeUnmount(() => {
     <button
       type="button"
       @click="toggleDropdown"
-      class="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-2 py-1.5 text-left text-gray-700 shadow-none transition-colors hover:border-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      class="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-2 py-1.5 text-left text-gray-700 shadow-none transition-colors hover:border-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
     >
       <span class="block truncate" :title="selectedOption.label">{{ selectedOption.label }}</span>
       <svg class="ml-2 h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,16 +78,13 @@ onBeforeUnmount(() => {
     </button>
 
     <!-- Dropdown Menu -->
-    <div
-      v-if="isOpen"
-      class="absolute right-0 z-50 mt-1 max-h-[300px] w-[260px] overflow-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl outline-none"
-    >
-      <div v-if="searchable" class="sticky top-0 z-10 bg-white px-2 pb-1.5 pt-1">
+    <div v-if="isOpen" class="absolute right-0 z-50 mt-1 max-h-[300px] w-[260px] overflow-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl outline-none">
+      <div v-if="searchable" class="sticky top-0 z-10 bg-white px-2 pt-1 pb-1.5">
         <input
           ref="inputRef"
           type="text"
           v-model="searchQuery"
-          class="w-full rounded-md border border-slate-300 bg-slate-50 px-2 py-1.5 text-sm outline-none transition-colors focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500"
+          class="w-full rounded-md border border-slate-300 bg-slate-50 px-2 py-1.5 text-sm transition-colors outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500"
           placeholder="搜尋..."
           @click.stop
         />
@@ -99,8 +96,8 @@ onBeforeUnmount(() => {
           @click="selectOption(opt)"
           :class="[
             opt.disabled
-              ? 'cursor-default bg-slate-100 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-500'
-              : 'cursor-pointer select-none px-3 py-2 text-sm transition-colors hover:bg-blue-50 hover:text-blue-900',
+              ? 'cursor-default bg-slate-100 px-3 py-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase'
+              : 'cursor-pointer px-3 py-2 text-sm transition-colors select-none hover:bg-blue-50 hover:text-blue-900',
             model === opt.value && !opt.disabled ? 'bg-blue-100 font-semibold text-blue-900' : 'text-slate-700',
           ]"
         >
@@ -108,7 +105,7 @@ onBeforeUnmount(() => {
             {{ opt.label }}
           </span>
         </li>
-        <li v-if="filteredOptions.length === 0" class=" cursor-default select-none px-3 py-3 text-center text-sm text-gray-500">找不到相符的字型</li>
+        <li v-if="filteredOptions.length === 0" class="cursor-default px-3 py-3 text-center text-sm text-gray-500 select-none">找不到相符的字型</li>
       </ul>
     </div>
   </div>

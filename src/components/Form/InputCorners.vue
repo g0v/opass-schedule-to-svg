@@ -15,7 +15,7 @@ const corners = [
   { id: 'br', icon: 'M12 18 A6 6 0 0 0 18 12', label: '右下' },
 ]
 
-const toggleCorner = (id) => {
+const toggleCorner = id => {
   const newValue = [...props.modelValue]
   const index = newValue.indexOf(id)
   if (index > -1) {
@@ -26,7 +26,7 @@ const toggleCorner = (id) => {
   emit('update:modelValue', newValue)
 }
 
-const isActive = (id) => props.modelValue.includes(id)
+const isActive = id => props.modelValue.includes(id)
 </script>
 
 <template>
@@ -37,9 +37,7 @@ const isActive = (id) => props.modelValue.includes(id)
       type="button"
       @click="toggleCorner(corner.id)"
       class="flex h-8 w-8 items-center justify-center rounded border transition-all"
-      :class="[
-        isActive(corner.id) ? 'active-corner shadow-sm' : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600',
-      ]"
+      :class="[isActive(corner.id) ? 'active-corner shadow-sm' : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600']"
       :title="`${corner.label}圓角`"
     >
       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">

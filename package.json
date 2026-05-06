@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run gen-svg",
+    "format": "prettier --write .",
     "preview": "vite preview",
     "gen-svg": "node index.js"
   },
