@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
+import VueDevTools from 'vite-plugin-vue-devtools'
 import path from 'node:path'
 import sirv from 'sirv'
 
@@ -12,6 +13,7 @@ export default defineConfig({
   base: `/${PROJECT_NAME}/`,
   plugins: [
     vue(),
+    VueDevTools(),
     tailwindcss(),
     {
       name: 'serve-data-from-dist',
