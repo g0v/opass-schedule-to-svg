@@ -1,12 +1,17 @@
 <script setup>
 import { computed } from 'vue'
+import InputSelectSearch from './Form/InputSelectSearch.vue'
+import InputBorderSides from './Form/InputBorderSides.vue'
 
 const props = defineProps(['obj', 'prop', 'unit', 'type', 'label', 'min', 'max', 'step', 'options'])
 
 const value = computed({
   get: () => {
     if (!props.obj) return ''
-    if (props.obj.style === undefined) return ''
+    // If not using style string, return property directly
+    if (props.obj.style === undefined || props.type === 'border-sides') {
+      return props.obj[props.prop]
+    }
     const regex = new RegExp(`${props.prop}\\s*:\\s*([^;"]+)`)
     const match = (props.obj.style || '').match(regex)
     if (!match) return ''
@@ -17,6 +22,11 @@ const value = computed({
   },
   set: val => {
     if (!props.obj) return
+    // If not using style string, set property directly
+    if (props.obj.style === undefined || props.type === 'border-sides') {
+      props.obj[props.prop] = val
+      return
+    }
     if (props.obj.style === undefined) props.obj.style = ''
 
     let currentStyle = props.obj.style || ''
@@ -39,10 +49,9 @@ const value = computed({
     <span class="shrink-0 text-sm text-gray-600">{{ label }}</span>
     <div class="flex items-center justify-end gap-2" :style="type === 'select' ? 'flex: 1' : ''">
       <input v-if="type === 'range'" type="range" :min="min" :max="max" :step="step" v-model="value" />
-      <select v-if="type === 'select'" v-model="value" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem">
-        <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
-      <input v-if="type !== 'select'" :type="type === 'color' ? 'color' : type === 'range' ? 'number' : 'text'" :step="step" v-model="value" :style="type === 'color' ? '' : ''" />
+      <InputSelectSearch v-if="type === 'select'" v-model="value" :options="options" :searchable="prop === 'font-family'" />
+      <InputBorderSides v-if="type === 'border-sides'" v-model="value" />
+      <input v-if="type !== 'select' && type !== 'border-sides'" :type="type === 'color' ? 'color' : type === 'range' ? 'number' : 'text'" :step="step" v-model="value" :style="type === 'color' ? '' : ''" />
       <input v-if="type === 'color'" type="text" v-model="value" style="width: 70px" />
     </div>
   </div>

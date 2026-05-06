@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { stringify } from 'svgson'
 import { scheduleTemplate } from '~/template/scheduleTemplate.js'
 import StyleInput from '~/components/StyleInput.vue'
@@ -10,6 +10,10 @@ import InputText from '~/components/Form/InputText.vue'
 import InputColor from '~/components/Form/InputColor.vue'
 import InputCheckbox from '~/components/Form/InputCheckbox.vue'
 import InputTextarea from '~/components/Form/InputTextarea.vue'
+import InputBorderSides from '~/components/Form/InputBorderSides.vue'
+import InputCorners from '~/components/Form/InputCorners.vue'
+import fallbackConfig from '../../style.config.json'
+import { globalStore } from '../store.js'
 
 // Mock Data
 const mockSchedule = {
@@ -45,15 +49,40 @@ const mockSessions = [
 
 // Default Config (loaded from style.config.json initially)
 let defaultConfig = {}
+let baseConfig = {} // The 'reset target': user's uploaded style or system default (never working edits)
 const config = ref(null)
+let initialConfigStr = ''
 const svgHtml = ref('')
 
 // Load initial config
 onMounted(async () => {
-  try {
-    const res = await fetch('./data/style.config.json')
-    defaultConfig = await res.json()
+  // baseConfig = the explicit user baseline (uploaded/fetched), NOT working edits
+  // Persist it on first visit so it survives homepage confirm-sync
+  if (globalStore.playgroundBaseConfig) {
+    baseConfig = JSON.parse(JSON.stringify(globalStore.playgroundBaseConfig))
+  } else if (globalStore.dynamicStyleConfig) {
+    baseConfig = JSON.parse(JSON.stringify(globalStore.dynamicStyleConfig))
+    globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(baseConfig)) // persist immediately
+  } else {
+    try {
+      const res = await fetch('./data/style.config.json')
+      if (!res.ok) throw new Error()
+      baseConfig = await res.json()
+    } catch (e) {
+      console.warn('Failed to load config from fetch, using fallback')
+      baseConfig = JSON.parse(JSON.stringify(fallbackConfig))
+    }
+    globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(baseConfig)) // persist immediately
+  }
 
+  // defaultConfig = what we actually load (could be user's last edits)
+  if (globalStore.playgroundWorkingConfig) {
+    defaultConfig = JSON.parse(JSON.stringify(globalStore.playgroundWorkingConfig))
+  } else {
+    defaultConfig = JSON.parse(JSON.stringify(baseConfig))
+  }
+  
+  try {
     // Ensure defaults for backward compatibility
     if (defaultConfig.sessionBlock) {
       if (defaultConfig.sessionBlock.timeBadge && defaultConfig.sessionBlock.timeBadge.show === undefined) {
@@ -62,9 +91,17 @@ onMounted(async () => {
       if (defaultConfig.sessionBlock.speaker && defaultConfig.sessionBlock.speaker.style === undefined) {
         defaultConfig.sessionBlock.speaker.style = ''
       }
+      if (defaultConfig.sessionBlock.background && !defaultConfig.sessionBlock.background.borderSides) {
+        defaultConfig.sessionBlock.background.borderSides = ['top', 'bottom', 'left', 'right']
+      }
+      if (defaultConfig.sessionBlock.timeBadge) {
+        if (defaultConfig.sessionBlock.timeBadge.yOffset === undefined) defaultConfig.sessionBlock.timeBadge.yOffset = 0
+        if (defaultConfig.sessionBlock.timeBadge.roundedCorners === undefined) defaultConfig.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
+      }
     }
 
     config.value = JSON.parse(JSON.stringify(defaultConfig))
+    initialConfigStr = JSON.stringify(config.value)
   } catch (e) {
     console.error('Failed to load config', e)
   }
@@ -80,12 +117,28 @@ watch(
       const svgObj = scheduleTemplate(mockSchedule, mockSessions, config.value)
       // Convert to String using svgson (loaded via UMD script tag)
       svgHtml.value = stringify(svgObj)
+      
+      // Save back to global store draft so we can prompt user on homepage ONLY if actually changed
+      if (initialConfigStr && JSON.stringify(config.value) !== initialConfigStr) {
+        globalStore.playgroundDraftStyle = JSON.parse(JSON.stringify(config.value))
+      } else {
+        globalStore.playgroundDraftStyle = null
+      }
+      // Always persist working config so user can return to their edits
+      globalStore.playgroundWorkingConfig = JSON.parse(JSON.stringify(config.value))
     } catch (e) {
       console.error('Render error:', e)
     }
   },
   { deep: true }
 )
+
+// Guarantee saving working config when user navigates away (belt & suspenders with the watch)
+onBeforeUnmount(() => {
+  if (config.value) {
+    globalStore.playgroundWorkingConfig = JSON.parse(JSON.stringify(config.value))
+  }
+})
 
 const downloadConfig = () => {
   const blob = new Blob([JSON.stringify(config.value, null, 2)], { type: 'application/json' })
@@ -124,6 +177,9 @@ const importConfig = event => {
       }
 
       config.value = imported
+      // Update the base config so reset goes back to THIS uploaded file
+      globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(imported))
+      baseConfig = JSON.parse(JSON.stringify(imported))
       console.log('Config imported successfully')
       // Clear the value so the same file can be imported again
       event.target.value = ''
@@ -138,7 +194,18 @@ const importConfig = event => {
 
 const resetConfig = () => {
   if (!confirm('確定要重置所有設定嗎？')) return
-  config.value = JSON.parse(JSON.stringify(defaultConfig))
+  config.value = JSON.parse(JSON.stringify(baseConfig))
+  // Clear working config so next visit also starts from base
+  globalStore.playgroundWorkingConfig = null
+}
+
+const syncFromHomepage = () => {
+  if (!globalStore.dynamicStyleConfig) {
+    alert('首頁目前沒有自訂樣式可供同步。')
+    return
+  }
+  if (!confirm('將會套用目前首頁正在使用的樣式，確定要覆蓋目前的編輯嗎？')) return
+  config.value = JSON.parse(JSON.stringify(globalStore.dynamicStyleConfig))
 }
 
 const resetKeys = paths => {
@@ -149,7 +216,7 @@ const resetKeys = paths => {
   paths.forEach(path => {
     const parts = path.split('.')
     let current = config.value
-    let source = defaultConfig
+    let source = baseConfig
 
     // Navigate to parent of the target key
     let valid = true
@@ -171,7 +238,7 @@ const resetKeys = paths => {
   })
 }
 
-const fontOptions = [
+const defaultFontOptions = [
   { label: 'Liberation Sans / Arial', value: "'Liberation Sans', Arial, sans-serif" },
   { label: '思源黑體', value: "'NotoSansTC-Regular', 'Noto Sans TC', sans-serif" },
   { label: '思源宋體', value: "'Noto Serif TC', serif" },
@@ -183,6 +250,96 @@ const fontOptions = [
   { label: '等寬字型', value: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' },
   { label: '系統預設介面字型', value: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" },
 ]
+
+const fontOptions = ref([...defaultFontOptions])
+
+const useLocalFonts = ref(false)
+const isLocalFontsBlocked = ref(false)
+
+onMounted(async () => {
+  if ('permissions' in navigator && 'query' in navigator.permissions) {
+    try {
+      const p = await navigator.permissions.query({ name: 'local-fonts' })
+      isLocalFontsBlocked.value = p.state === 'denied'
+      p.onchange = () => {
+        isLocalFontsBlocked.value = p.state === 'denied'
+        if (p.state !== 'granted') {
+          useLocalFonts.value = false
+          fontOptions.value = [...defaultFontOptions]
+          localStorage.setItem('opass_use_local_fonts', 'false')
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  if (localStorage.getItem('opass_use_local_fonts') === 'true' && !isLocalFontsBlocked.value) {
+    await performLoadLocalFonts(true)
+  }
+})
+const toggleLocalFonts = async () => {
+  if (useLocalFonts.value) {
+    useLocalFonts.value = false
+    fontOptions.value = [...defaultFontOptions]
+    localStorage.setItem('opass_use_local_fonts', 'false')
+    return
+  }
+
+  if (!('queryLocalFonts' in window)) {
+    alert('您的瀏覽器不支援讀取本機字型功能。請使用最新版的 Chrome 或 Edge。')
+    return
+  }
+
+  await performLoadLocalFonts(false)
+}
+
+const performLoadLocalFonts = async (isAutoLoad = false) => {
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      try {
+        const permission = await navigator.permissions.query({ name: 'local-fonts' })
+        if (permission.state === 'denied') {
+          isLocalFontsBlocked.value = true
+          if (!isAutoLoad) alert('您已經拒絕存取本機字型，請至瀏覽器網址列左側的設定中開啟權限。')
+          return
+        }
+        if (isAutoLoad && permission.state !== 'granted') {
+          return // 防止自動載入時觸發瀏覽器視窗干擾使用者
+        }
+      } catch (e) {
+        if (isAutoLoad) return
+      }
+    } else if (isAutoLoad) {
+      return
+    }
+
+    const fonts = await window.queryLocalFonts()
+    if (!fonts || fonts.length === 0) {
+      return
+    }
+
+    const uniqueFonts = new Set()
+    const localFontOptions = []
+
+    fonts.forEach(font => {
+      if (!uniqueFonts.has(font.family)) {
+        uniqueFonts.add(font.family)
+        localFontOptions.push({
+          label: `本機: ${font.family}`,
+          value: `'${font.family}'`,
+        })
+      }
+    })
+
+    fontOptions.value = [...defaultFontOptions, { label: '--- 以下為本機字型 ---', value: '', disabled: true }, ...localFontOptions]
+    useLocalFonts.value = true
+    localStorage.setItem('opass_use_local_fonts', 'true')
+  } catch (err) {
+    if (!isAutoLoad) alert('讀取本機字型失敗：可能是因為尚未取得權限，請確認瀏覽器提示。')
+    console.error(err)
+  }
+}
 
 const weightOptions = [
   { label: '100 - Thin', value: '100' },
@@ -202,10 +359,15 @@ const weightOptions = [
     <div class="z-10 flex h-screen shrink-0 flex-col gap-6 overflow-y-auto border border-slate-300 p-6 shadow-xl" style="width: 400px">
       <div>
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-xl font-bold text-gray-900">SVG Playground</h2>
-          <RouterLink to="/">
-            <button class="btn text-xs">回首頁</button>
-          </RouterLink>
+          <div class="flex items-center gap-3">
+            <RouterLink to="/" class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-gray-500 transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-gray-900 active:scale-95 shadow-sm" title="返回首頁">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </RouterLink>
+            <h2 class="text-xl font-bold text-gray-900">SVG Playground</h2>
+          </div>
+          <button class="btn text-xs" @click="syncFromHomepage" :disabled="!globalStore.dynamicStyleConfig" title="同步首頁目前的樣式">同步首頁</button>
         </div>
         <div class="grid grid-cols-4 gap-2">
           <!-- Download Config (Style) -->
@@ -246,6 +408,29 @@ const weightOptions = [
             </svg>
           </button>
         </div>
+
+        <!-- Load Local Fonts Toggle -->
+        <div class="relative mt-4">
+          <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3" :class="{ 'opacity-40': isLocalFontsBlocked }">
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-gray-700">使用本機字型</span>
+              <span class="mt-0.5 text-xs text-gray-500">在下拉選單中顯示本機字型 (需授權)</span>
+            </div>
+            <div class="cursor-pointer" @click.capture.stop.prevent="toggleLocalFonts">
+              <InputCheckbox :modelValue="useLocalFonts" style="pointer-events: none" />
+            </div>
+          </div>
+          
+          <!-- Blocked Overlay -->
+          <div v-if="isLocalFontsBlocked" class="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/40 backdrop-blur-[2px]">
+            <div class="flex items-center gap-2 rounded-full bg-slate-800/90 px-4 py-2 text-white shadow-xl backdrop-blur-sm">
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="text-xs font-medium tracking-wide">請至網址列重新開啟字型權限</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Global Layout -->
@@ -270,6 +455,9 @@ const weightOptions = [
           <InputColor v-model="config.sessionBlock.background.stroke" />
           <InputText v-model="config.sessionBlock.background.stroke" />
         </Control>
+        <Control title="邊框顯示">
+          <InputBorderSides v-model="config.sessionBlock.background.borderSides" />
+        </Control>
       </ControlGroup>
 
       <!-- Time Badge Section -->
@@ -287,6 +475,10 @@ const weightOptions = [
             <InputRange :min="0" :max="500" :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
             <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
           </Control>
+          <Control title="Y 偏移">
+            <InputRange :min="-100" :max="100" :step="1" v-model.number="config.sessionBlock.timeBadge.yOffset" />
+            <InputText isNumber v-model.number="config.sessionBlock.timeBadge.yOffset" />
+          </Control>
           <Control title="寬度">
             <InputRange :min="10" :max="300" :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
             <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
@@ -294,6 +486,9 @@ const weightOptions = [
           <Control title="高度">
             <InputRange :min="10" :max="100" :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
             <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
+          </Control>
+          <Control title="圓角位置">
+            <InputCorners v-model="config.sessionBlock.timeBadge.roundedCorners" />
           </Control>
           <Control title="圓角 RX">
             <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.timeBadge.rx" />
@@ -304,6 +499,13 @@ const weightOptions = [
             <InputText isNumber v-model.number="config.sessionBlock.timeBadge.ry" />
           </Control>
         </template>
+        <div class="mt-4 border-t border-slate-100 pt-4">
+          <h4 class="mb-3 shrink-0 text-sm font-bold text-gray-600">時間</h4>
+          <StyleInput :obj="config.sessionBlock.timeText" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+          <StyleInput :obj="config.sessionBlock.timeText" prop="fill" type="color" label="文字顏色" />
+          <StyleInput :obj="config.sessionBlock.timeText" prop="font-family" type="select" :options="fontOptions" label="字型" />
+          <StyleInput :obj="config.sessionBlock.timeText" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+        </div>
       </ControlGroup>
 
       <!-- Session Title Section -->

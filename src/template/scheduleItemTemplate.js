@@ -29,29 +29,71 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
           y: layout.y,
           width: svgWidth,
           height: layout.height,
-          stroke: sessionBlock.background.stroke,
+          stroke: sessionBlock.background.borderSides && sessionBlock.background.borderSides.length === 4 ? sessionBlock.background.stroke : 'none',
           fill: sessionBlock.background.fill,
         },
         children: [],
       },
-      ...(sessionBlock.timeBadge.show !== false
-        ? [
-            {
-              name: 'rect',
+      ...(sessionBlock.background.borderSides && sessionBlock.background.borderSides.length < 4
+        ? sessionBlock.background.borderSides.map(side => {
+            const attributes = {
+              stroke: sessionBlock.background.stroke,
+              'stroke-width': 1, // Default stroke width
+            }
+            if (side === 'top') {
+              attributes.x1 = 0
+              attributes.y1 = layout.y
+              attributes.x2 = svgWidth
+              attributes.y2 = layout.y
+            } else if (side === 'bottom') {
+              attributes.x1 = 0
+              attributes.y1 = layout.y + layout.height
+              attributes.x2 = svgWidth
+              attributes.y2 = layout.y + layout.height
+            } else if (side === 'left') {
+              attributes.x1 = 0
+              attributes.y1 = layout.y
+              attributes.x2 = 0
+              attributes.y2 = layout.y + layout.height
+            } else if (side === 'right') {
+              attributes.x1 = svgWidth
+              attributes.y1 = layout.y
+              attributes.x2 = svgWidth
+              attributes.y2 = layout.y + layout.height
+            }
+            return {
+              name: 'line',
               type: 'element',
               value: '',
               parent: null,
-              attributes: {
-                x: sessionBlock.timeBadge.x,
-                y: layout.y + (layout.height - sessionBlock.timeBadge.height) / 2,
-                width: sessionBlock.timeBadge.width,
-                height: sessionBlock.timeBadge.height,
-                rx: sessionBlock.timeBadge.rx,
-                ry: sessionBlock.timeBadge.ry,
-                fill: sessionBlock.timeBadge.fill,
-              },
+              attributes,
               children: [],
-            },
+            }
+          })
+        : []),
+      ...(sessionBlock.timeBadge.show !== false
+        ? [
+            (() => {
+              const x = parseFloat(sessionBlock.timeBadge.x)
+              const y = layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + (sessionBlock.timeBadge.yOffset || 0)
+              const w = parseFloat(sessionBlock.timeBadge.width)
+              const h = parseFloat(sessionBlock.timeBadge.height)
+              const rx = parseFloat(sessionBlock.timeBadge.rx) || 0
+              const ry = parseFloat(sessionBlock.timeBadge.ry) || rx
+              const corners = sessionBlock.timeBadge.roundedCorners || ['tl', 'tr', 'br', 'bl']
+
+              return {
+                name: 'path',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  d: generateRoundedRectPath(x, y, w, h, rx, ry, corners),
+                  fill: sessionBlock.timeBadge.fill,
+                },
+                children: [],
+              }
+            })(),
           ]
         : []),
       {
@@ -72,7 +114,7 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
             const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24
             const baselineOffset = fontSize * 0.35
 
-            return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0)
+            return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0) + (sessionBlock.timeBadge.yOffset || 0)
           })(),
           class: 'time',
           'text-anchor': 'middle',
@@ -178,6 +220,26 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
       },
     ],
   }
+}
+
+function generateRoundedRectPath(x, y, w, h, rx, ry, corners) {
+  const rTL = corners.includes('tl') ? rx : 0
+  const rTR = corners.includes('tr') ? rx : 0
+  const rBR = corners.includes('br') ? rx : 0
+  const rBL = corners.includes('bl') ? rx : 0
+
+  return [
+    `M ${x + rTL},${y}`,
+    `H ${x + w - rTR}`,
+    rTR > 0 ? `A ${rTR},${ry} 0 0 1 ${x + w},${y + ry}` : `V ${y}`,
+    `V ${y + h - rBR}`,
+    rBR > 0 ? `A ${rBR},${ry} 0 0 1 ${x + w - rBR},${y + h}` : `H ${x + w}`,
+    `H ${x + rBL}`,
+    rBL > 0 ? `A ${rBL},${ry} 0 0 1 ${x},${y + h - ry}` : `V ${y + h}`,
+    `V ${y + rTL}`,
+    rTL > 0 ? `A ${rTL},${ry} 0 0 1 ${x + rTL},${y}` : '',
+    'Z',
+  ].join(' ')
 }
 
 function getSpeakerY(rowTop, rowHeight, speakerConfig, speakerCount, lineIndex = 0) {
@@ -324,15 +386,9 @@ function normalizeTextStyle(style) {
 }
 
 function normalizeFontFamily(fontFamily) {
-  if (/Onest-Regular_|'Onest'|\bOnest\b/i.test(fontFamily)) {
-    return "'Liberation Sans', Arial, sans-serif"
-  }
-
-  if (/NotoSansTC-Regular|'Noto Sans TC'|\bNoto Sans TC\b/i.test(fontFamily)) {
-    return "'Noto Sans CJK TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif"
-  }
-
-  return fontFamily
+  if (!fontFamily) return ''
+  // 提取逗號分隔的第一個字體選項，避免向量軟體匯入時出錯
+  return fontFamily.split(',')[0].trim()
 }
 
 function replaceStyleValue(style, property, nextValue) {
