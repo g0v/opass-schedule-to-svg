@@ -54,6 +54,20 @@ const config = ref(null)
 let initialConfigStr = ''
 const svgHtml = ref('')
 
+function syncPlaygroundState() {
+  if (!config.value) return
+
+  const clonedConfig = JSON.parse(JSON.stringify(config.value))
+
+  if (initialConfigStr && JSON.stringify(config.value) !== initialConfigStr) {
+    globalStore.playgroundDraftStyle = clonedConfig
+  } else {
+    globalStore.playgroundDraftStyle = null
+  }
+
+  globalStore.playgroundWorkingConfig = clonedConfig
+}
+
 // Load initial config
 onMounted(async () => {
   // baseConfig = the explicit user baseline (uploaded/fetched), NOT working edits
@@ -118,14 +132,8 @@ watch(
       // Convert to String using svgson (loaded via UMD script tag)
       svgHtml.value = stringify(svgObj)
 
-      // Save back to global store draft so we can prompt user on homepage ONLY if actually changed
-      if (initialConfigStr && JSON.stringify(config.value) !== initialConfigStr) {
-        globalStore.playgroundDraftStyle = JSON.parse(JSON.stringify(config.value))
-      } else {
-        globalStore.playgroundDraftStyle = null
-      }
-      // Always persist working config so user can return to their edits
-      globalStore.playgroundWorkingConfig = JSON.parse(JSON.stringify(config.value))
+      // Persist draft + working config so homepage can pick up edits on return.
+      syncPlaygroundState()
     } catch (e) {
       console.error('Render error:', e)
     }
@@ -135,9 +143,7 @@ watch(
 
 // Guarantee saving working config when user navigates away (belt & suspenders with the watch)
 onBeforeUnmount(() => {
-  if (config.value) {
-    globalStore.playgroundWorkingConfig = JSON.parse(JSON.stringify(config.value))
-  }
+  syncPlaygroundState()
 })
 
 const downloadConfig = () => {

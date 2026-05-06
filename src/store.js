@@ -3,7 +3,7 @@ import fallbackConfig from '../style.config.json'
 
 export const globalStore = reactive({
   dynamicSchedule: null,
-  dynamicStyleConfig: null,
+  dynamicStyleConfig: JSON.parse(JSON.stringify(fallbackConfig)),
   playgroundDraftStyle: null,
   playgroundWorkingConfig: null,
   playgroundBaseConfig: null, // The user's explicitly uploaded/fetched style (reset target)

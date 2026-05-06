@@ -25,17 +25,13 @@ onMounted(async () => {
     globalStore.playgroundDraftStyle = null
   }
 
-  if (dates.value.length > 0 || dynamicSchedule.value) {
+  if (dynamicSchedule.value) {
     showUploadUI.value = false
     return // Already loaded from store
   }
   try {
-    const [datesRes, roomsRes, configRes] = await Promise.allSettled([
-      fetch('./data/dates.json').then(res => {
-        if (!res.ok) throw new Error()
-        return res.json()
-      }),
-      fetch('./data/rooms.json').then(res => {
+    const [scheduleRes, configRes] = await Promise.allSettled([
+      fetch('./data/schedule.json').then(res => {
         if (!res.ok) throw new Error()
         return res.json()
       }),
@@ -45,13 +41,8 @@ onMounted(async () => {
       }),
     ])
 
-    if (datesRes.status === 'fulfilled') {
-      dates.value = datesRes.value
-      dates.value.sort()
-    }
-    if (roomsRes.status === 'fulfilled') {
-      rooms.value = roomsRes.value
-      rooms.value.sort()
+    if (scheduleRes.status === 'fulfilled') {
+      processSchedule(scheduleRes.value, '預設資料')
     }
     if (configRes.status === 'fulfilled') {
       if (!dynamicStyleConfig.value) dynamicStyleConfig.value = configRes.value
@@ -59,7 +50,7 @@ onMounted(async () => {
       if (!dynamicStyleConfig.value) dynamicStyleConfig.value = fallbackConfig
     }
 
-    if (dates.value.length === 0) {
+    if (!dynamicSchedule.value || dates.value.length === 0) {
       showUploadUI.value = true
       loadedScheduleName.value = '無'
     }
@@ -199,33 +190,21 @@ async function downloadAll() {
       zip.file('style.config.json', JSON.stringify(dynamicStyleConfig.value, null, 2))
     }
 
-    // Iterate and add SVGs
-    if (dynamicSchedule.value) {
-      for (const date of dates.value) {
-        for (const room of rooms.value) {
-          const sessions = dynamicSchedule.value.sessions.filter(s => formatDate(s.start) === date && s.room === room)
-          if (sessions.length > 0) {
-            const sortedSessions = sessions.sort((a, b) => new Date(a.start) - new Date(b.start))
-            const svgObj = scheduleTemplate(dynamicSchedule.value, sortedSessions, dynamicStyleConfig.value)
-            const svgString = stringify(svgObj)
-            zip.file(`${date}-${room}.svg`, svgString)
-          }
+    if (!dynamicSchedule.value || !dynamicStyleConfig.value) {
+      throw new Error('目前沒有可供匯出的議程或樣式資料')
+    }
+
+    // Render every SVG from the current schedule + style config instead of reusing static assets.
+    for (const date of dates.value) {
+      for (const room of rooms.value) {
+        const sessions = dynamicSchedule.value.sessions.filter(s => formatDate(s.start) === date && s.room === room)
+        if (sessions.length > 0) {
+          const sortedSessions = sessions.sort((a, b) => new Date(a.start) - new Date(b.start))
+          const svgObj = scheduleTemplate(dynamicSchedule.value, sortedSessions, dynamicStyleConfig.value)
+          const svgString = stringify(svgObj)
+          zip.file(`${date}-${room}.svg`, svgString)
         }
       }
-    } else {
-      const fetchPromises = []
-      for (const date of dates.value) {
-        for (const room of rooms.value) {
-          fetchPromises.push(
-            fetch(`./data/${date}-${room}.svg`)
-              .then(res => {
-                if (res.ok) return res.text().then(text => zip.file(`${date}-${room}.svg`, text))
-              })
-              .catch(() => {}) // Ignore missing files
-          )
-        }
-      }
-      await Promise.all(fetchPromises)
     }
 
     const content = await zip.generateAsync({ type: 'blob' })
@@ -244,23 +223,15 @@ async function downloadAll() {
 }
 
 function download() {
-  if (!hasDateAndRoom.value) return
+  if (!hasDateAndRoom.value || !dynamicSchedule.value || !dynamicStyleConfig.value || !dynamicSvgHtml.value) return
 
-  if (dynamicSchedule.value && dynamicSvgHtml.value) {
-    const blob = new Blob([dynamicSvgHtml.value], { type: 'image/svg+xml' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${selectedDate.value}-${selectedRoom.value}.svg`
-    a.click()
-    URL.revokeObjectURL(url)
-  } else {
-    const url = `./data/${selectedDate.value}-${selectedRoom.value}.svg`
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${selectedDate.value}-${selectedRoom.value}.svg`
-    a.click()
-  }
+  const blob = new Blob([dynamicSvgHtml.value], { type: 'image/svg+xml' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${selectedDate.value}-${selectedRoom.value}.svg`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 </script>
 
@@ -517,11 +488,8 @@ function download() {
           </div>
         </header>
 
-        <div v-if="hasDateAndRoom" class="mt-4 overflow-auto rounded-xl border border-slate-200 bg-white p-6 shadow-md">
-          <div v-if="dynamicSchedule" v-html="dynamicSvgHtml" class="dynamic-svg-container flex w-full justify-center"></div>
-          <div v-else class="flex w-full justify-center">
-            <img :src="`./data/${selectedDate}-${selectedRoom}.svg`" class="max-w-full rounded-lg shadow-sm" />
-          </div>
+        <div v-if="hasDateAndRoom && dynamicSchedule" class="mt-4 overflow-auto rounded-xl border border-slate-200 bg-white p-6 shadow-md">
+          <div v-html="dynamicSvgHtml" class="dynamic-svg-container flex w-full justify-center"></div>
         </div>
       </template>
 
