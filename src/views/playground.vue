@@ -167,6 +167,15 @@ onMounted(async () => {
       if (defaultConfig.sessionBlock.timeBadge.yOffset === undefined) defaultConfig.sessionBlock.timeBadge.yOffset = 0
       if (defaultConfig.sessionBlock.timeBadge.roundedCorners === undefined) defaultConfig.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
     }
+    if (defaultConfig.sessionBlock.timeBlock === undefined) {
+      defaultConfig.sessionBlock.timeBlock = { show: true, yOffset: 0 }
+    }
+    if (defaultConfig.sessionBlock.timeBlock.show === undefined) {
+      defaultConfig.sessionBlock.timeBlock.show = true
+    }
+    if (defaultConfig.sessionBlock.titleBlock === undefined) {
+      defaultConfig.sessionBlock.titleBlock = { yOffset: 0, gap: 18 }
+    }
     if (defaultConfig.sessionBlock.titleZh) {
       if (defaultConfig.sessionBlock.titleZh.show === undefined) {
         defaultConfig.sessionBlock.titleZh.show = true
@@ -590,22 +599,29 @@ const fillOptions = [
 
 
       <!-- Time Badge Section -->
-      <ControlGroup v-if="config && activeSectionTab === 'time'" title="時間標籤區塊" v-model:show="config.sessionBlock.timeBadge.show" @reset="resetKeys(['sessionBlock.timeBadge', 'sessionBlock.timeText'])">
+      <ControlGroup v-if="config && activeSectionTab === 'time'" title="時間標籤區塊" v-model:show="config.sessionBlock.timeBlock.show" @reset="resetKeys(['sessionBlock.timeBadge', 'sessionBlock.timeText', 'sessionBlock.timeBlock'])">
         <div class="space-y-4">
           <InputSegmented 
             v-model="activeTimeTab" 
             :options="[
-              { label: '標籤樣式', value: 'badge' },
+              { 
+                label: '標籤樣式', 
+                value: 'badge',
+                show: config.sessionBlock.timeBadge.show,
+                onToggle: () => config.sessionBlock.timeBadge.show = !config.sessionBlock.timeBadge.show
+              },
               { 
                 label: '文字樣式', 
-                value: 'text'
+                value: 'text',
+                show: config.sessionBlock.timeText.show,
+                onToggle: () => config.sessionBlock.timeText.show = !config.sessionBlock.timeText.show
               }
             ]" 
           />
           
-          <div class="min-h-[300px] border-t border-slate-50 pt-5">
+          <div class="min-h-[300px] border-t border-slate-50 pt-5 space-y-4">
             <!-- Badge Style Panel -->
-            <div v-if="activeTimeTab === 'badge'" class="space-y-4">
+            <div v-if="activeTimeTab === 'badge'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.timeBadge.show }">
               <Control title="背景顏色">
                 <InputColor v-model="config.sessionBlock.timeBadge.fill" v-model:hasValue="config.sessionBlock.timeBadge.hasFill" />
                 <InputText v-model="config.sessionBlock.timeBadge.fill" :disabled="!config.sessionBlock.timeBadge.hasFill" />
@@ -613,10 +629,6 @@ const fillOptions = [
               <Control title="X 座標">
                 <InputRange :min="0" :max="500" :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
                 <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
-              </Control>
-              <Control title="Y 偏移">
-                <InputRange :min="-100" :max="100" :step="1" v-model.number="config.sessionBlock.timeBadge.yOffset" />
-                <InputText isNumber v-model.number="config.sessionBlock.timeBadge.yOffset" />
               </Control>
               <Control title="寬度">
                 <InputRange :min="10" :max="300" :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
@@ -640,18 +652,30 @@ const fillOptions = [
             </div>
 
             <!-- Text Style Panel -->
-            <div v-if="activeTimeTab === 'text'" class="space-y-4">
+            <div v-if="activeTimeTab === 'text'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.timeText.show }">
               <StyleInput :obj="config.sessionBlock.timeText" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
               <StyleInput :obj="config.sessionBlock.timeText" prop="fill" type="color" label="文字顏色" />
               <StyleInput :obj="config.sessionBlock.timeText" prop="font-family" type="select" :options="fontOptions" label="字型" />
               <StyleInput :obj="config.sessionBlock.timeText" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+            </div>
+
+            <!-- Empty State Warning when hidden -->
+            <div v-if="(activeTimeTab === 'badge' && !config.sessionBlock.timeBadge.show) || (activeTimeTab === 'text' && !config.sessionBlock.timeText.show)" class="py-4 text-center border-b border-slate-50">
+               <p class="text-[10px] text-slate-400">目前已隱藏時間{{ activeTimeTab === 'badge' ? '標籤背景' : '文字' }}，點擊上方眼睛圖示開啟</p>
+            </div>
+
+            <div class="border-t border-slate-50 pt-5 space-y-4">
+              <Control title="區塊位移 (Y)">
+                <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.timeBlock.yOffset" />
+                <InputText isNumber v-model.number="config.sessionBlock.timeBlock.yOffset" />
+              </Control>
             </div>
           </div>
         </div>
       </ControlGroup>
 
       <!-- Session Title Section -->
-      <ControlGroup v-if="config && activeSectionTab === 'title'" title="議程名字區塊" v-model:show="config.sessionBlock.showTitle" @reset="resetKeys(['sessionBlock.titleZh', 'sessionBlock.titleEn'])">
+      <ControlGroup v-if="config && activeSectionTab === 'title'" title="議程名字區塊" v-model:show="config.sessionBlock.showTitle" @reset="resetKeys(['sessionBlock.titleZh', 'sessionBlock.titleEn', 'sessionBlock.titleBlock'])">
         <div class="space-y-4">
           <!-- Premium Tab Switcher -->
           <InputSegmented 
@@ -672,7 +696,7 @@ const fillOptions = [
             ]" 
           />
           
-          <div class="min-h-[300px] border-t border-slate-50 pt-5">
+          <div class="min-h-[300px] border-t border-slate-50 pt-5 space-y-4">
             <!-- Zh Panel -->
             <div v-if="activeTitleTab === 'zh'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.titleZh.show }">
               <StyleInput :obj="config.sessionBlock.titleZh" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
@@ -682,10 +706,6 @@ const fillOptions = [
               <Control title="X 座標">
                 <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.titleZh.x" />
                 <InputText isNumber v-model.number="config.sessionBlock.titleZh.x" />
-              </Control>
-              <Control title="Y 位移">
-                <InputRange :min="0" :max="150" v-model.number="config.sessionBlock.titleZh.yOffset" />
-                <InputText isNumber v-model.number="config.sessionBlock.titleZh.yOffset" />
               </Control>
             </div>
 
@@ -699,15 +719,22 @@ const fillOptions = [
                 <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.titleEn.x" />
                 <InputText isNumber v-model.number="config.sessionBlock.titleEn.x" />
               </Control>
-              <Control title="Y 位移">
-                <InputRange :min="0" :max="150" v-model.number="config.sessionBlock.titleEn.yOffset" />
-                <InputText isNumber v-model.number="config.sessionBlock.titleEn.yOffset" />
-              </Control>
             </div>
 
             <!-- Empty State Warning when hidden -->
             <div v-if="(activeTitleTab === 'zh' && !config.sessionBlock.titleZh.show) || (activeTitleTab === 'en' && !config.sessionBlock.titleEn.show)" class="py-4 text-center">
                <p class="text-[10px] text-slate-400">目前已隱藏{{ activeTitleTab === 'zh' ? '中文' : '英文' }}標題，點擊上方眼睛圖示開啟</p>
+            </div>
+
+            <div class="border-t border-slate-50 pt-5 space-y-4">
+              <Control title="區塊位移 (Y)">
+                <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.titleBlock.yOffset" />
+                <InputText isNumber v-model.number="config.sessionBlock.titleBlock.yOffset" />
+              </Control>
+              <Control title="文字間距">
+                <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.titleBlock.gap" />
+                <InputText isNumber v-model.number="config.sessionBlock.titleBlock.gap" />
+              </Control>
             </div>
           </div>
         </div>
@@ -784,11 +811,11 @@ const fillOptions = [
             </div>
 
             <!-- Empty State Warning when hidden -->
-            <div v-if="(activeTypeTab === 'zh' && !config.sessionBlock.sessionTypeZh.show) || (activeTypeTab === 'en' && !config.sessionBlock.sessionTypeEn.show)" class="py-4 text-center border-b border-slate-50">
+            <div v-if="(activeTypeTab === 'zh' && !config.sessionBlock.sessionTypeZh.show) || (activeTypeTab === 'en' && !config.sessionBlock.sessionTypeEn.show)" class="py-4 text-center">
                <p class="text-[10px] text-slate-400">目前已隱藏{{ activeTypeTab === 'zh' ? '中文' : '英文' }}類型，點擊上方眼睛圖示開啟</p>
             </div>
 
-            <div class="pt-2 space-y-4">
+            <div class="border-t border-slate-50 pt-5 space-y-4">
               <Control title="區塊位移 (Y)">
                 <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.sessionType.yOffset" />
                 <InputText isNumber v-model.number="config.sessionBlock.sessionType.yOffset" />

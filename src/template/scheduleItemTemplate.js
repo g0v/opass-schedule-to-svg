@@ -81,7 +81,7 @@ export function scheduleItemTemplate(session, schedule, config, layout) {
             }
           })
         : []),
-      ...(sessionBlock.timeBadge.show !== false
+      ...(sessionBlock.timeBadge.show !== false && sessionBlock.timeBlock?.show !== false
         ? [
             (() => {
               const x = parseFloat(sessionBlock.timeBadge.x)
@@ -98,7 +98,15 @@ export function scheduleItemTemplate(session, schedule, config, layout) {
                 value: '',
                 parent: null,
                 attributes: {
-                  d: generateRoundedRectPath(x, y, w, h, rx, ry, corners),
+                  d: generateRoundedRectPath(
+                    parseFloat(sessionBlock.timeBadge.x), 
+                    layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + (sessionBlock.timeBlock?.yOffset ?? 0), 
+                    parseFloat(sessionBlock.timeBadge.width), 
+                    parseFloat(sessionBlock.timeBadge.height), 
+                    parseFloat(sessionBlock.timeBadge.rx), 
+                    parseFloat(sessionBlock.timeBadge.ry), 
+                    sessionBlock.timeBadge.roundedCorners || ['tl', 'tr', 'br', 'bl']
+                  ),
                   fill: sessionBlock.timeBadge.hasFill !== false ? sessionBlock.timeBadge.fill : 'none',
                 },
                 children: [],
@@ -106,7 +114,7 @@ export function scheduleItemTemplate(session, schedule, config, layout) {
             })(),
           ]
         : []),
-      ...(sessionBlock.timeBadge.show !== false && sessionBlock.timeText.show !== false
+      ...(sessionBlock.timeText.show !== false && sessionBlock.timeBlock?.show !== false
         ? [
             {
               name: 'text',
@@ -116,17 +124,15 @@ export function scheduleItemTemplate(session, schedule, config, layout) {
               attributes: {
                 x: sessionBlock.timeBadge.show !== false ? parseFloat(sessionBlock.timeBadge.x) + parseFloat(sessionBlock.timeBadge.width) / 2 : sessionBlock.timeText.x,
                 y: (() => {
-                  const centerY =
-                    sessionBlock.timeBadge.show !== false
-                      ? layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + parseFloat(sessionBlock.timeBadge.height) / 2
-                      : layout.y + layout.height / 2
+                  const blockYOffset = sessionBlock.timeBlock?.yOffset ?? 0
+                  const centerY = layout.y + (layout.height / 2) + blockYOffset
 
                   // Try to extract font-size to calculate baseline offset (approx 0.35-0.4em)
                   const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/)
                   const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24
                   const baselineOffset = fontSize * 0.35
 
-                  return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0) + (sessionBlock.timeBadge.yOffset || 0)
+                  return centerY + baselineOffset
                 })(),
                 class: 'time',
                 'text-anchor': 'middle',
@@ -383,11 +389,17 @@ function getTitleLayout(session, config) {
   const enFontSize = getFontSize(sessionBlock.titleEn.style, enLineHeight)
   const zhLines = wrapTextWithPretext(session.zh.title, sessionBlock.titleZh.style, titleMaxWidth)
   const enLines = wrapTextWithPretext(session.en.title, sessionBlock.titleEn.style, titleMaxWidth)
-  const titleGap = Math.max((sessionBlock.titleEn.yOffset || 0) - (sessionBlock.titleZh.yOffset || 0), 0)
-  const zhBlockHeight = sessionBlock.titleZh.show !== false ? getTextBlockHeight(zhLines.length, zhLineHeight, zhFontSize) : 0
-  const enBlockHeight = sessionBlock.titleEn.show !== false ? getTextBlockHeight(enLines.length, enLineHeight, enFontSize) : 0
-  const effectiveGap = (sessionBlock.titleZh.show !== false && sessionBlock.titleEn.show !== false) ? titleGap : 0
+  const titleGap = sessionBlock.titleBlock?.gap ?? 18
+  const blockYOffset = sessionBlock.titleBlock?.yOffset ?? 0
+  const zhShow = sessionBlock.titleZh.show !== false
+  const enShow = sessionBlock.titleEn.show !== false
+  const zhBlockHeight = zhShow ? getTextBlockHeight(zhLines.length, zhLineHeight, zhFontSize) : 0
+  const enBlockHeight = enShow ? getTextBlockHeight(enLines.length, enLineHeight, enFontSize) : 0
+  const effectiveGap = (zhShow && enShow) ? titleGap : 0
   const blockHeight = zhBlockHeight + effectiveGap + enBlockHeight
+
+  const zhTopY = 0
+  const enTopY = zhShow ? zhBlockHeight + titleGap : 0
 
   return {
     zhLines,
@@ -396,9 +408,9 @@ function getTitleLayout(session, config) {
     enLineHeight,
     zhFontSize,
     enFontSize,
-    topY: 0,
-    enTopY: zhBlockHeight + titleGap,
     blockHeight,
+    topY: zhTopY + blockYOffset,
+    enTopY: enTopY + blockYOffset,
   }
 }
 

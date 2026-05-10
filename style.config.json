@@ -34,6 +34,10 @@
       "fill": "#8DA4BE",
       "hasFill": true
     },
+    "timeBlock": {
+      "show": true,
+      "yOffset": 0
+    },
     "timeText": {
       "x": "95.75",
       "yOffset": 0,
