@@ -174,7 +174,6 @@ onMounted(async () => {
       if (defaultConfig.sessionBlock.timeBadge.show === undefined) {
         defaultConfig.sessionBlock.timeBadge.show = true
       }
-      if (defaultConfig.sessionBlock.timeBadge.yOffset === undefined) defaultConfig.sessionBlock.timeBadge.yOffset = 0
       if (defaultConfig.sessionBlock.timeBadge.roundedCorners === undefined) defaultConfig.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
     }
     if (defaultConfig.sessionBlock.timeBlock === undefined) {
@@ -208,10 +207,10 @@ onMounted(async () => {
       defaultConfig.sessionBlock.sessionType.show = true
     }
     if (defaultConfig.sessionBlock.sessionTypeZh === undefined) {
-      defaultConfig.sessionBlock.sessionTypeZh = { show: true, x: 220, yOffset: 58, style: "font-family:'Noto Sans TC', sans-serif;font-weight:700;font-size:14px;fill:#8DA4BE" }
+      defaultConfig.sessionBlock.sessionTypeZh = { show: true, x: 220, style: "font-family:'Noto Sans TC', sans-serif;font-weight:700;font-size:14px;fill:#8DA4BE" }
     }
     if (defaultConfig.sessionBlock.sessionTypeEn === undefined) {
-      defaultConfig.sessionBlock.sessionTypeEn = { show: true, x: 220, yOffset: 76, style: "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:10px;fill:#8DA4BE" }
+      defaultConfig.sessionBlock.sessionTypeEn = { show: true, x: 220, style: "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:10px;fill:#8DA4BE" }
     }
     if (defaultConfig.sessionBlock.timeText) {
       if (defaultConfig.sessionBlock.timeText.show === undefined) {

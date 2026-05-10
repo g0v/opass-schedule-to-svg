@@ -85,7 +85,6 @@ export function scheduleItemTemplate(session, schedule, config, layout) {
         ? [
             (() => {
               const x = parseFloat(sessionBlock.timeBadge.x)
-              const y = layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + (sessionBlock.timeBadge.yOffset || 0)
               const w = parseFloat(sessionBlock.timeBadge.width)
               const h = parseFloat(sessionBlock.timeBadge.height)
               const rx = parseFloat(sessionBlock.timeBadge.rx) || 0
