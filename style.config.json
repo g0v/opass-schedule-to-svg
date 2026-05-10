@@ -4,7 +4,9 @@
   "svgPreserveAspectRatio": "xMidYMid meet",
   "css": "",
   "sessionBlock": {
+    "showTitle": true,
     "background": {
+      "show": true,
       "fill": "#ffffff",
       "hasFill": true,
       "stroke": "#000000",
@@ -28,17 +30,20 @@
       "style": "font-family:'Noto Sans TC', sans-serif;font-weight:800;font-size:24.1px;fill:#ffffff"
     },
     "titleZh": {
+      "show": true,
       "x": "318.1",
       "yOffset": 62,
       "style": "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:17.8px;fill:#000000"
     },
     "titleEn": {
+      "show": true,
       "x": "318.1",
       "yOffset": 80,
       "style": "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:13.3px;fill:#000000"
     },
     "yPadding": 12,
     "speaker": {
+      "show": true,
       "x": "863.8",
       "lineHeight": 28,
       "dy": "24",

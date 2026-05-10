@@ -20,21 +20,28 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
       height: 'sessionHeight',
     },
     children: [
-      {
-        name: 'rect',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {
-          y: layout.y,
-          width: svgWidth,
-          height: layout.height,
-          stroke: (sessionBlock.background.hasStroke !== false && sessionBlock.background.borderSides && sessionBlock.background.borderSides.length === 4) ? sessionBlock.background.stroke : 'none',
-          fill: sessionBlock.background.hasFill !== false ? sessionBlock.background.fill : 'none',
-        },
-        children: [],
-      },
-      ...(sessionBlock.background.borderSides && sessionBlock.background.borderSides.length < 4
+      ...(sessionBlock.background.show !== false
+        ? [
+            {
+              name: 'rect',
+              type: 'element',
+              value: '',
+              parent: null,
+              attributes: {
+                y: layout.y,
+                width: svgWidth,
+                height: layout.height,
+                stroke:
+                  sessionBlock.background.hasStroke !== false && sessionBlock.background.borderSides && sessionBlock.background.borderSides.length === 4
+                    ? sessionBlock.background.stroke
+                    : 'none',
+                fill: sessionBlock.background.hasFill !== false ? sessionBlock.background.fill : 'none',
+              },
+              children: [],
+            },
+          ]
+        : []),
+      ...(sessionBlock.background.show !== false && sessionBlock.background.borderSides && sessionBlock.background.borderSides.length < 4
         ? sessionBlock.background.borderSides.map(side => {
             const attributes = {
               stroke: sessionBlock.background.hasStroke !== false ? sessionBlock.background.stroke : 'none',
@@ -96,128 +103,144 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
             })(),
           ]
         : []),
-      {
-        name: 'text',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {
-          x: sessionBlock.timeBadge.show !== false ? parseFloat(sessionBlock.timeBadge.x) + parseFloat(sessionBlock.timeBadge.width) / 2 : sessionBlock.timeText.x,
-          y: (() => {
-            const centerY =
-              sessionBlock.timeBadge.show !== false
-                ? layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + parseFloat(sessionBlock.timeBadge.height) / 2
-                : layout.y + layout.height / 2
+      ...(sessionBlock.timeBadge.show !== false && sessionBlock.timeText.show !== false
+        ? [
+            {
+              name: 'text',
+              type: 'element',
+              value: '',
+              parent: null,
+              attributes: {
+                x: sessionBlock.timeBadge.show !== false ? parseFloat(sessionBlock.timeBadge.x) + parseFloat(sessionBlock.timeBadge.width) / 2 : sessionBlock.timeText.x,
+                y: (() => {
+                  const centerY =
+                    sessionBlock.timeBadge.show !== false
+                      ? layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + parseFloat(sessionBlock.timeBadge.height) / 2
+                      : layout.y + layout.height / 2
 
-            // Try to extract font-size to calculate baseline offset (approx 0.35-0.4em)
-            const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/)
-            const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24
-            const baselineOffset = fontSize * 0.35
+                  // Try to extract font-size to calculate baseline offset (approx 0.35-0.4em)
+                  const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/)
+                  const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24
+                  const baselineOffset = fontSize * 0.35
 
-            return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0) + (sessionBlock.timeBadge.yOffset || 0)
-          })(),
-          class: 'time',
-          'text-anchor': 'middle',
-          style: timeTextStyle,
-        },
-        children: [
-          {
-            name: '',
-            type: 'text',
-            value: formatTime(session.start),
-            parent: null,
-            attributes: {},
-            children: [],
-          },
-        ],
-      },
-      {
-        name: 'g',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {},
-        children: titleLayout.zhLines.map((line, index) => ({
-          name: 'text',
-          type: 'element',
-          value: '',
-          parent: null,
-          attributes: {
-            x: sessionBlock.titleZh.x,
-            y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.topY, titleLayout.zhFontSize, titleLayout.zhLineHeight, index),
-            class: 'title',
-            style: titleZhStyle,
-          },
-          children: [
+                  return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0) + (sessionBlock.timeBadge.yOffset || 0)
+                })(),
+                class: 'time',
+                'text-anchor': 'middle',
+                style: timeTextStyle,
+              },
+              children: [
+                {
+                  name: '',
+                  type: 'text',
+                  value: formatTime(session.start),
+                  parent: null,
+                  attributes: {},
+                  children: [],
+                },
+              ],
+            },
+          ]
+        : []),
+      ...(sessionBlock.showTitle !== false && sessionBlock.titleZh.show !== false
+        ? [
             {
-              name: '',
-              type: 'text',
-              value: line,
+              name: 'g',
+              type: 'element',
+              value: '',
               parent: null,
               attributes: {},
-              children: [],
+              children: titleLayout.zhLines.map((line, index) => ({
+                name: 'text',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  x: sessionBlock.titleZh.x,
+                  y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.topY, titleLayout.zhFontSize, titleLayout.zhLineHeight, index),
+                  class: 'title',
+                  style: titleZhStyle,
+                },
+                children: [
+                  {
+                    name: '',
+                    type: 'text',
+                    value: line,
+                    parent: null,
+                    attributes: {},
+                    children: [],
+                  },
+                ],
+              })),
             },
-          ],
-        })),
-      },
-      {
-        name: 'g',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {},
-        children: titleLayout.enLines.map((line, index) => ({
-          name: 'text',
-          type: 'element',
-          value: '',
-          parent: null,
-          attributes: {
-            x: sessionBlock.titleEn.x,
-            y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.enTopY, titleLayout.enFontSize, titleLayout.enLineHeight, index),
-            class: 'title',
-            style: titleEnStyle,
-          },
-          children: [
+          ]
+        : []),
+      ...(sessionBlock.showTitle !== false && sessionBlock.titleEn.show !== false
+        ? [
             {
-              name: '',
-              type: 'text',
-              value: line,
+              name: 'g',
+              type: 'element',
+              value: '',
               parent: null,
               attributes: {},
-              children: [],
+              children: titleLayout.enLines.map((line, index) => ({
+                name: 'text',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  x: sessionBlock.titleEn.x,
+                  y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.enTopY, titleLayout.enFontSize, titleLayout.enLineHeight, index),
+                  class: 'title',
+                  style: titleEnStyle,
+                },
+                children: [
+                  {
+                    name: '',
+                    type: 'text',
+                    value: line,
+                    parent: null,
+                    attributes: {},
+                    children: [],
+                  },
+                ],
+              })),
             },
-          ],
-        })),
-      },
-      {
-        name: 'g',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {},
-        children: speakers.map((speaker, index) => ({
-          name: 'text',
-          type: 'element',
-          value: '',
-          parent: null,
-          attributes: {
-            x: sessionBlock.speaker.x,
-            y: getSpeakerY(layout.y, layout.height, sessionBlock.speaker, speakers.length, index),
-            class: 'speaker',
-            style: speakerStyle,
-          },
-          children: [
+          ]
+        : []),
+      ...(sessionBlock.speaker.show !== false
+        ? [
             {
-              name: '',
-              type: 'text',
-              value: speaker.zh.name,
+              name: 'g',
+              type: 'element',
+              value: '',
               parent: null,
               attributes: {},
-              children: [],
+              children: speakers.map((speaker, index) => ({
+                name: 'text',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  x: sessionBlock.speaker.x,
+                  y: getSpeakerY(layout.y, layout.height, sessionBlock.speaker, speakers.length, index),
+                  class: 'speaker',
+                  style: speakerStyle,
+                },
+                children: [
+                  {
+                    name: '',
+                    type: 'text',
+                    value: speaker.zh.name,
+                    parent: null,
+                    attributes: {},
+                    children: [],
+                  },
+                ],
+              })),
             },
-          ],
-        })),
-      },
+          ]
+        : []),
     ],
   }
 }
@@ -259,8 +282,8 @@ export function getSessionLayout(session, speakerList, config, y) {
   const sessionYPadding = getSessionVerticalPadding(config)
   const yPadding = Number(speakerConfig.yPadding) || 0
   const { blockHeight } = getSpeakerMetrics(speakerConfig, speakers.length)
-  const speakerHeight = speakers.length > 0 ? blockHeight + yPadding * 2 : 0
-  const titleLayout = getTitleLayout(session, config)
+  const speakerHeight = (speakers.length > 0 && speakerConfig.show !== false) ? blockHeight + yPadding * 2 : 0
+  const titleLayout = config.sessionBlock.showTitle !== false ? getTitleLayout(session, config) : { zhLines: [], enLines: [], blockHeight: 0, topY: 0, enTopY: 0, zhFontSize: 0, zhLineHeight: 0, enFontSize: 0, enLineHeight: 0 }
 
   return {
     y,
@@ -279,9 +302,10 @@ function getTitleLayout(session, config) {
   const zhLines = wrapTextWithPretext(session.zh.title, sessionBlock.titleZh.style, titleMaxWidth)
   const enLines = wrapTextWithPretext(session.en.title, sessionBlock.titleEn.style, titleMaxWidth)
   const titleGap = Math.max((sessionBlock.titleEn.yOffset || 0) - (sessionBlock.titleZh.yOffset || 0), 0)
-  const zhBlockHeight = getTextBlockHeight(zhLines.length, zhLineHeight, zhFontSize)
-  const enBlockHeight = getTextBlockHeight(enLines.length, enLineHeight, enFontSize)
-  const blockHeight = zhBlockHeight + titleGap + enBlockHeight
+  const zhBlockHeight = sessionBlock.titleZh.show !== false ? getTextBlockHeight(zhLines.length, zhLineHeight, zhFontSize) : 0
+  const enBlockHeight = sessionBlock.titleEn.show !== false ? getTextBlockHeight(enLines.length, enLineHeight, enFontSize) : 0
+  const effectiveGap = (sessionBlock.titleZh.show !== false && sessionBlock.titleEn.show !== false) ? titleGap : 0
+  const blockHeight = zhBlockHeight + effectiveGap + enBlockHeight
 
   return {
     zhLines,
