@@ -6,7 +6,9 @@
   "sessionBlock": {
     "background": {
       "fill": "#ffffff",
+      "hasFill": true,
       "stroke": "#000000",
+      "hasStroke": true,
       "borderSides": ["top", "bottom", "left", "right"]
     },
     "timeBadge": {
@@ -17,7 +19,8 @@
       "roundedCorners": ["tl", "tr", "br", "bl"],
       "rx": "10",
       "ry": "10",
-      "fill": "#8DA4BE"
+      "fill": "#8DA4BE",
+      "hasFill": true
     },
     "timeText": {
       "x": "95.75",

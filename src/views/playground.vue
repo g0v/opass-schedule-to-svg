@@ -105,10 +105,21 @@ onMounted(async () => {
       if (defaultConfig.sessionBlock.speaker && defaultConfig.sessionBlock.speaker.style === undefined) {
         defaultConfig.sessionBlock.speaker.style = ''
       }
-      if (defaultConfig.sessionBlock.background && !defaultConfig.sessionBlock.background.borderSides) {
-        defaultConfig.sessionBlock.background.borderSides = ['top', 'bottom', 'left', 'right']
+      if (defaultConfig.sessionBlock.background) {
+        if (!defaultConfig.sessionBlock.background.borderSides) {
+          defaultConfig.sessionBlock.background.borderSides = ['top', 'bottom', 'left', 'right']
+        }
+        if (defaultConfig.sessionBlock.background.hasFill === undefined) {
+          defaultConfig.sessionBlock.background.hasFill = true
+        }
+        if (defaultConfig.sessionBlock.background.hasStroke === undefined) {
+          defaultConfig.sessionBlock.background.hasStroke = true
+        }
       }
       if (defaultConfig.sessionBlock.timeBadge) {
+        if (defaultConfig.sessionBlock.timeBadge.hasFill === undefined) {
+          defaultConfig.sessionBlock.timeBadge.hasFill = true
+        }
         if (defaultConfig.sessionBlock.timeBadge.yOffset === undefined) defaultConfig.sessionBlock.timeBadge.yOffset = 0
         if (defaultConfig.sessionBlock.timeBadge.roundedCorners === undefined) defaultConfig.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
       }
@@ -179,6 +190,15 @@ const importConfig = event => {
         }
         if (imported.sessionBlock.speaker && imported.sessionBlock.speaker.style === undefined) {
           imported.sessionBlock.speaker.style = ''
+        }
+        if (imported.sessionBlock.background && imported.sessionBlock.background.hasFill === undefined) {
+          imported.sessionBlock.background.hasFill = true
+        }
+        if (imported.sessionBlock.background && imported.sessionBlock.background.hasStroke === undefined) {
+          imported.sessionBlock.background.hasStroke = true
+        }
+        if (imported.sessionBlock.timeBadge && imported.sessionBlock.timeBadge.hasFill === undefined) {
+          imported.sessionBlock.timeBadge.hasFill = true
         }
       }
 
@@ -358,6 +378,11 @@ const weightOptions = [
   { label: '800 - Extra Bold', value: '800' },
   { label: '900 - Black', value: '900' },
 ]
+
+const fillOptions = [
+  { label: '填色', value: true },
+  { label: '透明', value: false },
+]
 </script>
 
 <template>
@@ -462,15 +487,15 @@ const weightOptions = [
       <!-- Session Block Layout -->
       <ControlGroup v-if="config" title="議程區塊樣式" @reset="resetKeys(['sessionBlock.background'])">
         <Control title="背景顏色">
-          <InputColor v-model="config.sessionBlock.background.fill" />
-          <InputText v-model="config.sessionBlock.background.fill" />
+          <InputColor v-model="config.sessionBlock.background.fill" v-model:hasValue="config.sessionBlock.background.hasFill" />
+          <InputText v-model="config.sessionBlock.background.fill" :disabled="!config.sessionBlock.background.hasFill" />
         </Control>
         <Control title="邊框顏色">
-          <InputColor v-model="config.sessionBlock.background.stroke" />
-          <InputText v-model="config.sessionBlock.background.stroke" />
+          <InputColor v-model="config.sessionBlock.background.stroke" v-model:hasValue="config.sessionBlock.background.hasStroke" />
+          <InputText v-model="config.sessionBlock.background.stroke" :disabled="!config.sessionBlock.background.hasStroke" />
         </Control>
         <Control title="邊框顯示">
-          <InputBorderSides v-model="config.sessionBlock.background.borderSides" />
+          <InputBorderSides v-model="config.sessionBlock.background.borderSides" :disabled="!config.sessionBlock.background.hasStroke" />
         </Control>
       </ControlGroup>
 
@@ -482,8 +507,8 @@ const weightOptions = [
 
         <template v-if="config.sessionBlock.timeBadge.show !== false">
           <Control title="背景顏色">
-            <InputColor v-model="config.sessionBlock.timeBadge.fill" />
-            <InputText v-model="config.sessionBlock.timeBadge.fill" />
+            <InputColor v-model="config.sessionBlock.timeBadge.fill" v-model:hasValue="config.sessionBlock.timeBadge.hasFill" />
+            <InputText v-model="config.sessionBlock.timeBadge.fill" :disabled="!config.sessionBlock.timeBadge.hasFill" />
           </Control>
           <Control title="X 座標">
             <InputRange :min="0" :max="500" :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />

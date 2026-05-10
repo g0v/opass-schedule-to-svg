@@ -29,15 +29,15 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
           y: layout.y,
           width: svgWidth,
           height: layout.height,
-          stroke: sessionBlock.background.borderSides && sessionBlock.background.borderSides.length === 4 ? sessionBlock.background.stroke : 'none',
-          fill: sessionBlock.background.fill,
+          stroke: (sessionBlock.background.hasStroke !== false && sessionBlock.background.borderSides && sessionBlock.background.borderSides.length === 4) ? sessionBlock.background.stroke : 'none',
+          fill: sessionBlock.background.hasFill !== false ? sessionBlock.background.fill : 'none',
         },
         children: [],
       },
       ...(sessionBlock.background.borderSides && sessionBlock.background.borderSides.length < 4
         ? sessionBlock.background.borderSides.map(side => {
             const attributes = {
-              stroke: sessionBlock.background.stroke,
+              stroke: sessionBlock.background.hasStroke !== false ? sessionBlock.background.stroke : 'none',
               'stroke-width': 1, // Default stroke width
             }
             if (side === 'top') {
@@ -89,7 +89,7 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
                 parent: null,
                 attributes: {
                   d: generateRoundedRectPath(x, y, w, h, rx, ry, corners),
-                  fill: sessionBlock.timeBadge.fill,
+                  fill: sessionBlock.timeBadge.hasFill !== false ? sessionBlock.timeBadge.fill : 'none',
                 },
                 children: [],
               }
