@@ -60,9 +60,8 @@
     "speaker": {
       "show": true,
       "x": "863.8",
-      "lineHeight": 28,
-      "dy": "24",
-      "yPadding": 2,
+      "yOffset": 0,
+      "gap": 24,
       "style": "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:14px;fill:#000000"
     },
     "sessionTypeZh": {

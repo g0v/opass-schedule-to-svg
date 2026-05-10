@@ -764,26 +764,27 @@ const fillOptions = [
 
       <!-- Speaker Section -->
       <ControlGroup v-if="config && activeSectionTab === 'speaker'" title="講者區塊" v-model:show="config.sessionBlock.speaker.show" @reset="resetKeys(['sessionBlock.speaker'])">
-        <StyleInput :obj="config.sessionBlock.speaker" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
-        <StyleInput :obj="config.sessionBlock.speaker" prop="fill" type="color" label="文字顏色" />
-        <StyleInput :obj="config.sessionBlock.speaker" prop="font-family" type="select" :options="fontOptions" label="字型" />
-        <StyleInput :obj="config.sessionBlock.speaker" prop="font-weight" type="select" :options="weightOptions" label="字重" />
-        <Control title="X 座標">
-          <InputRange :min="0" :max="1000" v-model.number="config.sessionBlock.speaker.x" />
-          <InputText isNumber v-model.number="config.sessionBlock.speaker.x" />
-        </Control>
-        <Control title="行高">
-          <InputRange :min="10" :max="60" v-model.number="config.sessionBlock.speaker.lineHeight" />
-          <InputText isNumber v-model.number="config.sessionBlock.speaker.lineHeight" />
-        </Control>
-        <Control title="DY">
-          <InputRange :min="10" :max="60" v-model.number="config.sessionBlock.speaker.dy" />
-          <InputText isNumber v-model.number="config.sessionBlock.speaker.dy" />
-        </Control>
-        <Control title="Y 邊距">
-          <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.speaker.yPadding" />
-          <InputText isNumber v-model.number="config.sessionBlock.speaker.yPadding" />
-        </Control>
+        <div class="space-y-4">
+          <StyleInput :obj="config.sessionBlock.speaker" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+          <StyleInput :obj="config.sessionBlock.speaker" prop="fill" type="color" label="文字顏色" />
+          <StyleInput :obj="config.sessionBlock.speaker" prop="font-family" type="select" :options="fontOptions" label="字型" />
+          <StyleInput :obj="config.sessionBlock.speaker" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+          <Control title="X 座標">
+            <InputRange :min="0" :max="1000" v-model.number="config.sessionBlock.speaker.x" />
+            <InputText isNumber v-model.number="config.sessionBlock.speaker.x" />
+          </Control>
+          
+          <div class="border-t border-slate-50 pt-5 space-y-4">
+            <Control title="區塊位移 (Y)">
+              <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.speaker.yOffset" />
+              <InputText isNumber v-model.number="config.sessionBlock.speaker.yOffset" />
+            </Control>
+            <Control title="講者間距">
+              <InputRange :min="0" :max="100" v-model.number="config.sessionBlock.speaker.gap" />
+              <InputText isNumber v-model.number="config.sessionBlock.speaker.gap" />
+            </Control>
+          </div>
+        </div>
       </ControlGroup>
 
       <!-- Session Type Section -->

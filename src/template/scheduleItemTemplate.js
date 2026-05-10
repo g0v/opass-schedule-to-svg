@@ -356,9 +356,10 @@ function getSpeakerY(rowTop, rowHeight, speakerConfig, speakerCount, lineIndex =
     return rowTop + rowHeight / 2
   }
 
-  const { blockHeight, fontSize, dy } = getSpeakerMetrics(speakerConfig, speakerCount)
-  const blockTop = rowTop + (rowHeight - blockHeight) / 2
-  return blockTop + fontSize + dy * lineIndex
+  const { blockHeight, fontSize, gap } = getSpeakerMetrics(speakerConfig, speakerCount)
+  const blockYOffset = Number(speakerConfig.yOffset) || 0
+  const blockTop = rowTop + (rowHeight - blockHeight) / 2 + blockYOffset
+  return blockTop + fontSize + gap * lineIndex
 }
 
 export function getSessionLayout(session, schedule, config, y) {
@@ -367,9 +368,8 @@ export function getSessionLayout(session, schedule, config, y) {
   const baseHeight = config.autoRowHeight ? 0 : (Number(config.rowHeight) || 0)
   const speakerConfig = config.sessionBlock.speaker
   const sessionYPadding = getSessionVerticalPadding(config)
-  const yPadding = Number(speakerConfig.yPadding) || 0
   const { blockHeight } = getSpeakerMetrics(speakerConfig, speakers.length)
-  const speakerHeight = (speakers.length > 0 && speakerConfig.show !== false) ? blockHeight + yPadding * 2 : 0
+  const speakerHeight = (speakers.length > 0 && speakerConfig.show !== false) ? blockHeight : 0
   const titleLayout = config.sessionBlock.showTitle !== false ? getTitleLayout(session, config) : { zhLines: [], enLines: [], blockHeight: 0, topY: 0, enTopY: 0, zhFontSize: 0, zhLineHeight: 0, enFontSize: 0, enLineHeight: 0 }
 
   return {
@@ -415,14 +415,14 @@ function getTitleLayout(session, config) {
 
 function getSpeakerMetrics(speakerConfig, speakerCount) {
   if (speakerCount === 0) {
-    return { blockHeight: 0, ascent: 0 }
+    return { blockHeight: 0, fontSize: 0, gap: 0 }
   }
 
-  const fontSize = getFontSize(speakerConfig.style, Number(speakerConfig.lineHeight) || Number(speakerConfig.dy) || 24)
-  const dy = Number(speakerConfig.dy) || Number(speakerConfig.lineHeight) || fontSize
-  const blockHeight = fontSize + dy * (speakerCount - 1)
+  const fontSize = getFontSize(speakerConfig.style, 14)
+  const gap = Number(speakerConfig.gap) || 24
+  const blockHeight = fontSize + gap * (speakerCount - 1)
 
-  return { blockHeight, fontSize, dy }
+  return { blockHeight, fontSize, gap }
 }
 
 function getFontSize(style, fallback) {
