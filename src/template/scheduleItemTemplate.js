@@ -99,7 +99,14 @@ export function scheduleItemTemplate(session, schedule, config, layout) {
                 attributes: {
                   d: generateRoundedRectPath(
                     parseFloat(sessionBlock.timeBadge.x), 
-                    layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + (sessionBlock.timeBlock?.yOffset ?? 0), 
+                    (() => {
+                      const h = parseFloat(sessionBlock.timeBadge.height)
+                      const align = sessionBlock.timeBlock?.align || 'center'
+                      const yBase = align === 'top' 
+                        ? layout.y
+                        : layout.y + (layout.height - h) / 2
+                      return yBase + (sessionBlock.timeBlock?.yOffset ?? 0)
+                    })(), 
                     parseFloat(sessionBlock.timeBadge.width), 
                     parseFloat(sessionBlock.timeBadge.height), 
                     parseFloat(sessionBlock.timeBadge.rx), 
@@ -124,7 +131,14 @@ export function scheduleItemTemplate(session, schedule, config, layout) {
                 x: sessionBlock.timeBadge.show !== false ? parseFloat(sessionBlock.timeBadge.x) + parseFloat(sessionBlock.timeBadge.width) / 2 : sessionBlock.timeText.x,
                 y: (() => {
                   const blockYOffset = sessionBlock.timeBlock?.yOffset ?? 0
-                  const centerY = layout.y + (layout.height / 2) + blockYOffset
+                  const align = sessionBlock.timeBlock?.align || 'center'
+                  const badgeHeight = parseFloat(sessionBlock.timeBadge.height) || 36.8
+
+                  const centerYBase = align === 'top'
+                    ? layout.y + badgeHeight / 2
+                    : layout.y + (layout.height / 2)
+
+                  const centerY = centerYBase + blockYOffset
 
                   // Try to extract font-size to calculate baseline offset (approx 0.35-0.4em)
                   const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/)

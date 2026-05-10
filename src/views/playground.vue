@@ -177,7 +177,10 @@ onMounted(async () => {
       if (defaultConfig.sessionBlock.timeBadge.roundedCorners === undefined) defaultConfig.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
     }
     if (defaultConfig.sessionBlock.timeBlock === undefined) {
-      defaultConfig.sessionBlock.timeBlock = { show: true, yOffset: 0 }
+      defaultConfig.sessionBlock.timeBlock = { show: true, align: 'center', yOffset: 0 }
+    }
+    if (defaultConfig.sessionBlock.timeBlock.align === undefined) {
+      defaultConfig.sessionBlock.timeBlock.align = 'center'
     }
     if (defaultConfig.sessionBlock.timeBlock.show === undefined) {
       defaultConfig.sessionBlock.timeBlock.show = true
@@ -687,6 +690,15 @@ const fillOptions = [
             </div>
 
             <div class="border-t border-slate-50 pt-5 space-y-4">
+              <Control title="垂直對齊">
+                <InputSegmented 
+                  v-model="config.sessionBlock.timeBlock.align" 
+                  :options="[
+                    { label: '置中', value: 'center' },
+                    { label: '靠上', value: 'top' }
+                  ]" 
+                />
+              </Control>
               <Control title="區塊位移 (Y)">
                 <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.timeBlock.yOffset" />
                 <InputText isNumber v-model.number="config.sessionBlock.timeBlock.yOffset" />

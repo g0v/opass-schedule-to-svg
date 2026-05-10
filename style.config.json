@@ -37,6 +37,7 @@
     },
     "timeBlock": {
       "show": true,
+      "align": "center",
       "yOffset": 0
     },
     "timeText": {
