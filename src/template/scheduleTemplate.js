@@ -4,9 +4,9 @@ export function scheduleTemplate(schedule, sessions, config) {
   const { svgWidth, svgPreserveAspectRatio, css } = config
   let currentY = 0
   const items = sessions.map(session => {
-    const layout = getSessionLayout(session, schedule.speakers, config, currentY)
+    const layout = getSessionLayout(session, schedule, config, currentY)
     currentY += layout.height
-    return scheduleItemTemplate(session, schedule.speakers, config, layout)
+    return scheduleItemTemplate(session, schedule, config, layout)
   })
 
   return {

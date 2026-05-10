@@ -19,8 +19,13 @@ import { globalStore } from '../store.js'
 // Mock Data
 const mockSchedule = {
   speakers: [
-    { id: 's1', zh: { name: '講者A' }, en: { name: 'Speaker A' } },
-    { id: 's2', zh: { name: '講者B' }, en: { name: 'Speaker B' } },
+    { id: 's1', zh: { name: '黃豆豆' }, en: { name: 'Doudou Huang' } },
+    { id: 's2', zh: { name: '小馬哥' }, en: { name: 'Ma Bean' } },
+  ],
+  session_types: [
+    { id: 'K', zh: { name: '主題演講' }, en: { name: 'Keynote' } },
+    { id: 'P', zh: { name: '主題論壇' }, en: { name: 'Panel' } },
+    { id: 'W', zh: { name: '工作坊' }, en: { name: 'Workshop' } },
   ],
 }
 
@@ -34,8 +39,15 @@ const activeSectionTab = ref('layout')
 const sectionTabs = [
   { label: '版面', value: 'layout', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
   { label: '時間', value: 'time', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+  { label: '類型', value: 'type', icon: 'M7 7h10M7 12h10M7 17h10' },
   { label: '議程', value: 'title', icon: 'M3 5h18M3 10h18M3 15h18M3 20h18' },
   { label: '講者', value: 'speaker', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+]
+
+const activeTypeTab = ref('zh')
+const typeSubTabs = [
+  { label: '中文類型', value: 'zh' },
+  { label: '英文類型', value: 'en' },
 ]
 
 const activeTimeTab = ref('badge')
@@ -50,6 +62,7 @@ const mockSessions = [
     end: '2024-05-04T09:40:00+08:00',
     zh: { title: '開幕致詞' },
     en: { title: 'Opening Keynote' },
+    type: 'K',
     speakers: ['s1'],
   },
   {
@@ -57,6 +70,7 @@ const mockSessions = [
     end: '2024-05-04T11:00:00+08:00',
     zh: { title: '深入淺出 Web Components' },
     en: { title: 'Deep Dive into Web Components' },
+    type: 'P',
     speakers: ['s1', 's2'],
   },
   {
@@ -64,6 +78,7 @@ const mockSessions = [
     end: '2024-05-04T12:00:00+08:00',
     zh: { title: 'AI 對軟體工程的衝擊' },
     en: { title: 'Impact of AI on SE' },
+    type: 'W',
     speakers: ['s2'],
   },
 ]
@@ -166,6 +181,18 @@ onMounted(async () => {
       if (defaultConfig.sessionBlock.speaker.show === undefined) {
         defaultConfig.sessionBlock.speaker.show = true
       }
+    }
+    if (defaultConfig.sessionBlock.sessionType === undefined) {
+      defaultConfig.sessionBlock.sessionType = { show: true, yOffset: 0, gap: 18 }
+    }
+    if (defaultConfig.sessionBlock.sessionType.show === undefined) {
+      defaultConfig.sessionBlock.sessionType.show = true
+    }
+    if (defaultConfig.sessionBlock.sessionTypeZh === undefined) {
+      defaultConfig.sessionBlock.sessionTypeZh = { show: true, x: 220, yOffset: 58, style: "font-family:'Noto Sans TC', sans-serif;font-weight:700;font-size:14px;fill:#8DA4BE" }
+    }
+    if (defaultConfig.sessionBlock.sessionTypeEn === undefined) {
+      defaultConfig.sessionBlock.sessionTypeEn = { show: true, x: 220, yOffset: 76, style: "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:10px;fill:#8DA4BE" }
     }
     if (defaultConfig.sessionBlock.timeText) {
       if (defaultConfig.sessionBlock.timeText.show === undefined) {
@@ -708,6 +735,71 @@ const fillOptions = [
           <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.speaker.yPadding" />
           <InputText isNumber v-model.number="config.sessionBlock.speaker.yPadding" />
         </Control>
+      </ControlGroup>
+
+      <!-- Session Type Section -->
+      <ControlGroup v-if="config && activeSectionTab === 'type'" title="議程類型區塊" v-model:show="config.sessionBlock.sessionType.show" @reset="resetKeys(['sessionBlock.sessionTypeZh', 'sessionBlock.sessionTypeEn', 'sessionBlock.sessionType'])">
+        <div class="space-y-4">
+          <InputSegmented 
+            v-model="activeTypeTab" 
+            :options="[
+              { 
+                label: '中文類型', 
+                value: 'zh',
+                show: config.sessionBlock.sessionTypeZh.show,
+                onToggle: () => config.sessionBlock.sessionTypeZh.show = !config.sessionBlock.sessionTypeZh.show
+              },
+              { 
+                label: '英文類型', 
+                value: 'en',
+                show: config.sessionBlock.sessionTypeEn.show,
+                onToggle: () => config.sessionBlock.sessionTypeEn.show = !config.sessionBlock.sessionTypeEn.show
+              }
+            ]" 
+          />
+          
+          <div class="min-h-[300px] border-t border-slate-50 pt-5 space-y-4">
+            <!-- Zh Panel -->
+            <div v-if="activeTypeTab === 'zh'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.sessionTypeZh.show }">
+              <StyleInput :obj="config.sessionBlock.sessionTypeZh" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeZh" prop="fill" type="color" label="文字顏色" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeZh" prop="font-family" type="select" :options="fontOptions" label="字型" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeZh" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+              <Control title="X 座標">
+                <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.sessionTypeZh.x" />
+                <InputText isNumber v-model.number="config.sessionBlock.sessionTypeZh.x" />
+              </Control>
+            </div>
+
+            <!-- En Panel -->
+            <div v-if="activeTypeTab === 'en'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.sessionTypeEn.show }">
+              <StyleInput :obj="config.sessionBlock.sessionTypeEn" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeEn" prop="fill" type="color" label="文字顏色" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeEn" prop="font-family" type="select" :options="fontOptions" label="字型" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeEn" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+              <Control title="X 座標">
+                <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.sessionTypeEn.x" />
+                <InputText isNumber v-model.number="config.sessionBlock.sessionTypeEn.x" />
+              </Control>
+            </div>
+
+            <!-- Empty State Warning when hidden -->
+            <div v-if="(activeTypeTab === 'zh' && !config.sessionBlock.sessionTypeZh.show) || (activeTypeTab === 'en' && !config.sessionBlock.sessionTypeEn.show)" class="py-4 text-center border-b border-slate-50">
+               <p class="text-[10px] text-slate-400">目前已隱藏{{ activeTypeTab === 'zh' ? '中文' : '英文' }}類型，點擊上方眼睛圖示開啟</p>
+            </div>
+
+            <div class="pt-2 space-y-4">
+              <Control title="區塊位移 (Y)">
+                <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.sessionType.yOffset" />
+                <InputText isNumber v-model.number="config.sessionBlock.sessionType.yOffset" />
+              </Control>
+              <Control title="文字間距">
+                <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.sessionType.gap" />
+                <InputText isNumber v-model.number="config.sessionBlock.sessionType.gap" />
+              </Control>
+            </div>
+          </div>
+        </div>
       </ControlGroup>
 
       <ControlGroup v-if="config && activeSectionTab === 'layout'" title="CSS 樣式" @reset="resetKeys(['css'])">

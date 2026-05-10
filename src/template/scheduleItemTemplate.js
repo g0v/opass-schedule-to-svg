@@ -1,8 +1,11 @@
 import { formatTime } from '../../utils/formatTime.js'
 import { layoutWithLines, prepareWithSegments } from '@chenglou/pretext'
 
-export function scheduleItemTemplate(session, speakerList, config, layout) {
+export function scheduleItemTemplate(session, schedule, config, layout) {
+  const speakerList = schedule.speakers
+  const sessionTypes = schedule.session_types || []
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
+  const sessionTypeData = sessionTypes.find(t => t.id === session.type)
   const { svgWidth, sessionBlock } = config
   const titleLayout = layout.titleLayout
   const timeTextStyle = normalizeTextStyle(sessionBlock.timeText.style)
@@ -241,9 +244,87 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
             },
           ]
         : []),
+      ...(session.type && sessionBlock.sessionType?.show !== false
+        ? [
+            (() => {
+              const zhStyle = normalizeTextStyle(sessionBlock.sessionTypeZh.style)
+              const enStyle = normalizeTextStyle(sessionBlock.sessionTypeEn.style)
+              const zhFontSize = getFontSize(zhStyle, 14)
+              const enFontSize = getFontSize(enStyle, 10)
+              const zhLineHeight = getLineHeight(zhStyle)
+              const enLineHeight = getLineHeight(enStyle)
+              
+              const zhShow = sessionBlock.sessionTypeZh.show !== false
+              const enShow = sessionBlock.sessionTypeEn.show !== false
+              const typeGap = sessionBlock.sessionType?.gap ?? 18
+              const blockYOffset = sessionBlock.sessionType?.yOffset ?? 0
+              
+              const zhHeight = zhShow ? zhFontSize : 0
+              const enHeight = enShow ? enFontSize : 0
+              const effectiveGap = (zhShow && enShow) ? typeGap : 0
+              const blockHeight = zhHeight + effectiveGap + enHeight
+              
+              const zhTopY = 0
+              const enTopY = zhHeight + effectiveGap
+
+              return {
+                name: 'g',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {},
+                children: [
+                  ...(zhShow ? [{
+                    name: 'text',
+                    type: 'element',
+                    value: '',
+                    parent: null,
+                    attributes: {
+                      x: sessionBlock.sessionTypeZh.x,
+                      y: getTextLineY(layout.y, layout.height, blockHeight, zhTopY + blockYOffset, zhFontSize, zhLineHeight, 0),
+                      class: 'session-type',
+                      'text-anchor': 'middle',
+                      style: zhStyle,
+                    },
+                    children: [{
+                      name: '',
+                      type: 'text',
+                      value: sessionTypeData?.zh?.name || session.type,
+                      parent: null,
+                      attributes: {},
+                      children: [],
+                    }],
+                  }] : []),
+                  ...(enShow ? [{
+                    name: 'text',
+                    type: 'element',
+                    value: '',
+                    parent: null,
+                    attributes: {
+                      x: sessionBlock.sessionTypeEn.x,
+                      y: getTextLineY(layout.y, layout.height, blockHeight, enTopY + blockYOffset, enFontSize, enLineHeight, 0),
+                      class: 'session-type',
+                      'text-anchor': 'middle',
+                      style: enStyle,
+                    },
+                    children: [{
+                      name: '',
+                      type: 'text',
+                      value: sessionTypeData?.en?.name || session.type,
+                      parent: null,
+                      attributes: {},
+                      children: [],
+                    }],
+                  }] : []),
+                ]
+              }
+            })(),
+          ]
+        : []),
     ],
   }
 }
+
 
 function generateRoundedRectPath(x, y, w, h, rx, ry, corners) {
   const rTL = corners.includes('tl') ? rx : 0
@@ -275,7 +356,8 @@ function getSpeakerY(rowTop, rowHeight, speakerConfig, speakerCount, lineIndex =
   return blockTop + fontSize + dy * lineIndex
 }
 
-export function getSessionLayout(session, speakerList, config, y) {
+export function getSessionLayout(session, schedule, config, y) {
+  const speakerList = schedule.speakers || []
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
   const baseHeight = Number(config.rowHeight) || 0
   const speakerConfig = config.sessionBlock.speaker
