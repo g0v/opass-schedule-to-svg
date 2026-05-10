@@ -21,6 +21,7 @@
       ]
     },
     "timeBadge": {
+      "show": true,
       "x": "45.1",
       "width": "101.3",
       "height": "36.8",
@@ -41,6 +42,7 @@
       "yOffset": 0
     },
     "timeText": {
+      "show": true,
       "x": "95.75",
       "style": "font-family:'Noto Sans TC', sans-serif;font-weight:800;font-size:24.1px;fill:#ffffff"
     },

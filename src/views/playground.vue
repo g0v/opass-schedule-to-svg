@@ -125,102 +125,61 @@ onMounted(async () => {
     globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(baseConfig)) // persist immediately
   }
 
+  const applyDefaults = (conf) => {
+    if (!conf) return
+    if (conf.autoRowHeight === undefined) conf.autoRowHeight = false
+    if (conf.sessionBlock === undefined) conf.sessionBlock = {}
+    if (conf.sessionBlock.yPadding === undefined) conf.sessionBlock.yPadding = 12
+
+    if (conf.sessionBlock) {
+      if (conf.sessionBlock.showTitle === undefined) conf.sessionBlock.showTitle = true
+      if (conf.sessionBlock.timeBadge && conf.sessionBlock.timeBadge.show === undefined) conf.sessionBlock.timeBadge.show = true
+      if (conf.sessionBlock.speaker && conf.sessionBlock.speaker.style === undefined) conf.sessionBlock.speaker.style = ''
+      if (conf.sessionBlock.background) {
+        if (!conf.sessionBlock.background.borderSides) conf.sessionBlock.background.borderSides = ['top', 'bottom', 'left', 'right']
+        if (conf.sessionBlock.background.hasFill === undefined) conf.sessionBlock.background.hasFill = true
+        if (conf.sessionBlock.background.hasStroke === undefined) conf.sessionBlock.background.hasStroke = true
+        if (conf.sessionBlock.background.show === undefined) conf.sessionBlock.background.show = true
+      }
+      if (conf.sessionBlock.timeBadge) {
+        if (conf.sessionBlock.timeBadge.hasFill === undefined) conf.sessionBlock.timeBadge.hasFill = true
+        if (conf.sessionBlock.timeBadge.show === undefined) conf.sessionBlock.timeBadge.show = true
+        if (conf.sessionBlock.timeBadge.roundedCorners === undefined) conf.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
+      }
+      if (conf.sessionBlock.timeBlock === undefined) conf.sessionBlock.timeBlock = { show: true, align: 'center', yOffset: 0 }
+      if (conf.sessionBlock.timeBlock.align === undefined) conf.sessionBlock.timeBlock.align = 'center'
+      if (conf.sessionBlock.timeBlock.show === undefined) conf.sessionBlock.timeBlock.show = true
+      if (conf.sessionBlock.titleBlock === undefined) conf.sessionBlock.titleBlock = { yOffset: 0, gap: 18 }
+      if (conf.sessionBlock.titleZh && conf.sessionBlock.titleZh.show === undefined) conf.sessionBlock.titleZh.show = true
+      if (conf.sessionBlock.titleEn && conf.sessionBlock.titleEn.show === undefined) conf.sessionBlock.titleEn.show = true
+      if (conf.sessionBlock.speaker && conf.sessionBlock.speaker.show === undefined) conf.sessionBlock.speaker.show = true
+      if (conf.sessionBlock.sessionType === undefined) conf.sessionBlock.sessionType = { show: true, yOffset: 0, gap: 18 }
+      if (conf.sessionBlock.sessionType.show === undefined) conf.sessionBlock.sessionType.show = true
+      if (conf.sessionBlock.sessionTypeZh === undefined) {
+        conf.sessionBlock.sessionTypeZh = { show: true, x: 220, style: "font-family:'Noto Sans TC', sans-serif;font-weight:700;font-size:14px;fill:#8DA4BE" }
+      }
+      if (conf.sessionBlock.sessionTypeEn === undefined) {
+        conf.sessionBlock.sessionTypeEn = { show: true, x: 220, style: "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:10px;fill:#8DA4BE" }
+      }
+      if (conf.sessionBlock.timeText && conf.sessionBlock.timeText.show === undefined) {
+        conf.sessionBlock.timeText.show = true
+      }
+    }
+  }
+
+  applyDefaults(baseConfig)
+  globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(baseConfig)) // persist immediately
+
   // defaultConfig = what we actually load (could be user's last edits)
   if (globalStore.playgroundWorkingConfig) {
     defaultConfig = JSON.parse(JSON.stringify(globalStore.playgroundWorkingConfig))
   } else {
     defaultConfig = JSON.parse(JSON.stringify(baseConfig))
   }
+  
+  applyDefaults(defaultConfig)
 
-  // Ensure defaults for backward compatibility
-  if (defaultConfig.autoRowHeight === undefined) {
-    defaultConfig.autoRowHeight = false
-  }
-  if (defaultConfig.sessionBlock === undefined) {
-    defaultConfig.sessionBlock = {}
-  }
-  if (defaultConfig.sessionBlock.yPadding === undefined) {
-    defaultConfig.sessionBlock.yPadding = 12
-  }
 
-  if (defaultConfig.sessionBlock) {
-    if (defaultConfig.sessionBlock.showTitle === undefined) {
-      defaultConfig.sessionBlock.showTitle = true
-    }
-    if (defaultConfig.sessionBlock.timeBadge && defaultConfig.sessionBlock.timeBadge.show === undefined) {
-      defaultConfig.sessionBlock.timeBadge.show = true
-    }
-    if (defaultConfig.sessionBlock.speaker && defaultConfig.sessionBlock.speaker.style === undefined) {
-      defaultConfig.sessionBlock.speaker.style = ''
-    }
-    if (defaultConfig.sessionBlock.background) {
-      if (!defaultConfig.sessionBlock.background.borderSides) {
-        defaultConfig.sessionBlock.background.borderSides = ['top', 'bottom', 'left', 'right']
-      }
-      if (defaultConfig.sessionBlock.background.hasFill === undefined) {
-        defaultConfig.sessionBlock.background.hasFill = true
-      }
-      if (defaultConfig.sessionBlock.background.hasStroke === undefined) {
-        defaultConfig.sessionBlock.background.hasStroke = true
-      }
-      if (defaultConfig.sessionBlock.background.show === undefined) {
-        defaultConfig.sessionBlock.background.show = true
-      }
-    }
-    if (defaultConfig.sessionBlock.timeBadge) {
-      if (defaultConfig.sessionBlock.timeBadge.hasFill === undefined) {
-        defaultConfig.sessionBlock.timeBadge.hasFill = true
-      }
-      if (defaultConfig.sessionBlock.timeBadge.show === undefined) {
-        defaultConfig.sessionBlock.timeBadge.show = true
-      }
-      if (defaultConfig.sessionBlock.timeBadge.roundedCorners === undefined) defaultConfig.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
-    }
-    if (defaultConfig.sessionBlock.timeBlock === undefined) {
-      defaultConfig.sessionBlock.timeBlock = { show: true, align: 'center', yOffset: 0 }
-    }
-    if (defaultConfig.sessionBlock.timeBlock.align === undefined) {
-      defaultConfig.sessionBlock.timeBlock.align = 'center'
-    }
-    if (defaultConfig.sessionBlock.timeBlock.show === undefined) {
-      defaultConfig.sessionBlock.timeBlock.show = true
-    }
-    if (defaultConfig.sessionBlock.titleBlock === undefined) {
-      defaultConfig.sessionBlock.titleBlock = { yOffset: 0, gap: 18 }
-    }
-    if (defaultConfig.sessionBlock.titleZh) {
-      if (defaultConfig.sessionBlock.titleZh.show === undefined) {
-        defaultConfig.sessionBlock.titleZh.show = true
-      }
-    }
-    if (defaultConfig.sessionBlock.titleEn) {
-      if (defaultConfig.sessionBlock.titleEn.show === undefined) {
-        defaultConfig.sessionBlock.titleEn.show = true
-      }
-    }
-    if (defaultConfig.sessionBlock.speaker) {
-      if (defaultConfig.sessionBlock.speaker.show === undefined) {
-        defaultConfig.sessionBlock.speaker.show = true
-      }
-    }
-    if (defaultConfig.sessionBlock.sessionType === undefined) {
-      defaultConfig.sessionBlock.sessionType = { show: true, yOffset: 0, gap: 18 }
-    }
-    if (defaultConfig.sessionBlock.sessionType.show === undefined) {
-      defaultConfig.sessionBlock.sessionType.show = true
-    }
-    if (defaultConfig.sessionBlock.sessionTypeZh === undefined) {
-      defaultConfig.sessionBlock.sessionTypeZh = { show: true, x: 220, style: "font-family:'Noto Sans TC', sans-serif;font-weight:700;font-size:14px;fill:#8DA4BE" }
-    }
-    if (defaultConfig.sessionBlock.sessionTypeEn === undefined) {
-      defaultConfig.sessionBlock.sessionTypeEn = { show: true, x: 220, style: "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:10px;fill:#8DA4BE" }
-    }
-    if (defaultConfig.sessionBlock.timeText) {
-      if (defaultConfig.sessionBlock.timeText.show === undefined) {
-        defaultConfig.sessionBlock.timeText.show = true
-      }
-    }
-  }
 
   config.value = JSON.parse(JSON.stringify(defaultConfig))
   initialConfigStr = JSON.stringify(config.value)
