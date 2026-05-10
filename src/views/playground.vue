@@ -133,6 +133,16 @@ onMounted(async () => {
   }
 
   // Ensure defaults for backward compatibility
+  if (defaultConfig.autoRowHeight === undefined) {
+    defaultConfig.autoRowHeight = false
+  }
+  if (defaultConfig.sessionBlock === undefined) {
+    defaultConfig.sessionBlock = {}
+  }
+  if (defaultConfig.sessionBlock.yPadding === undefined) {
+    defaultConfig.sessionBlock.yPadding = 12
+  }
+
   if (defaultConfig.sessionBlock) {
     if (defaultConfig.sessionBlock.showTitle === undefined) {
       defaultConfig.sessionBlock.showTitle = true
@@ -571,10 +581,23 @@ const fillOptions = [
       <div class="grow overflow-y-auto p-6 flex flex-col gap-6" style="scrollbar-gutter: stable;">
 
       <!-- Global Layout -->
-      <ControlGroup v-if="config && activeSectionTab === 'layout'" title="版面設定" @reset="resetKeys(['rowHeight', 'svgWidth'])">
-        <Control title="行高">
+      <ControlGroup v-if="config && activeSectionTab === 'layout'" title="版面設定" @reset="resetKeys(['autoRowHeight', 'rowHeight', 'sessionBlock.yPadding', 'svgWidth'])">
+        <Control title="行高模式">
+          <InputSegmented 
+            v-model="config.autoRowHeight" 
+            :options="[
+              { label: '固定高度', value: false },
+              { label: '隨內容增長', value: true }
+            ]" 
+          />
+        </Control>
+        <Control title="固定行高" v-if="!config.autoRowHeight">
           <InputRange :min="50" :max="300" v-model.number="config.rowHeight" />
           <InputText isNumber v-model.number="config.rowHeight" />
+        </Control>
+        <Control title="上下留白" v-if="config.autoRowHeight">
+          <InputRange :min="0" :max="100" v-model.number="config.sessionBlock.yPadding" />
+          <InputText isNumber v-model.number="config.sessionBlock.yPadding" />
         </Control>
         <Control title="寬度">
           <InputRange :min="300" :max="2000" v-model.number="config.svgWidth" />

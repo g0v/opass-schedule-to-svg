@@ -365,7 +365,7 @@ function getSpeakerY(rowTop, rowHeight, speakerConfig, speakerCount, lineIndex =
 export function getSessionLayout(session, schedule, config, y) {
   const speakerList = schedule.speakers || []
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
-  const baseHeight = Number(config.rowHeight) || 0
+  const baseHeight = config.autoRowHeight ? 0 : (Number(config.rowHeight) || 0)
   const speakerConfig = config.sessionBlock.speaker
   const sessionYPadding = getSessionVerticalPadding(config)
   const yPadding = Number(speakerConfig.yPadding) || 0

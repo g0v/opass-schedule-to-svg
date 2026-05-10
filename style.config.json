@@ -1,9 +1,11 @@
 {
+  "autoRowHeight": false,
   "rowHeight": 124,
   "svgWidth": 1080,
   "svgPreserveAspectRatio": "xMidYMid meet",
   "css": "",
   "sessionBlock": {
+    "yPadding": 12,
     "showTitle": true,
     "background": {
       "show": true,
