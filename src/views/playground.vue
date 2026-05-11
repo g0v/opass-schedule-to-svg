@@ -615,8 +615,8 @@ const fillOptions = [
             <!-- Badge Style Panel -->
             <div v-if="activeTimeTab === 'badge'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.timeBadge.show }">
               <Control title="背景顏色">
-                <InputColor v-model="config.sessionBlock.timeBadge.fill" v-model:hasValue="config.sessionBlock.timeBadge.hasFill" />
-                <InputText v-model="config.sessionBlock.timeBadge.fill" :disabled="!config.sessionBlock.timeBadge.hasFill" />
+                <InputColor v-model="config.sessionBlock.timeBadge.fill" disableNone />
+                <InputText v-model="config.sessionBlock.timeBadge.fill" />
               </Control>
               <Control title="X 座標">
                 <InputRange :min="0" :max="500" :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
