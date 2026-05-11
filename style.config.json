@@ -67,6 +67,13 @@
       "gap": 24,
       "style": "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:14px;fill:#000000"
     },
+    "qrCode": {
+      "show": true,
+      "x": "950",
+      "yOffset": 0,
+      "size": 64,
+      "fill": "#000000"
+    },
     "sessionTypeZh": {
       "show": true,
       "x": "220",

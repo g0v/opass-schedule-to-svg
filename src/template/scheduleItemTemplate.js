@@ -1,5 +1,7 @@
 import { formatTime } from '../../utils/formatTime.js'
 import { layoutWithLines, prepareWithSegments } from '@chenglou/pretext'
+import * as qrcodeModule from 'qrcode'
+const qrcode = qrcodeModule.default || qrcodeModule
 
 export function scheduleItemTemplate(session, schedule, config, layout) {
   const speakerList = schedule.speakers
@@ -80,6 +82,44 @@ export function scheduleItemTemplate(session, schedule, config, layout) {
               children: [],
             }
           })
+        : []),
+      ...(sessionBlock.qrCode?.show !== false && session.uri
+        ? [
+            (() => {
+              const qrCodeConfig = sessionBlock.qrCode || { size: 64, x: 950, yOffset: 0, fill: '#000000' }
+              const size = Number(qrCodeConfig.size) || 64
+              const text = session.uri
+              const { path, modulesSize } = getQRCodePath(text)
+              const scale = size / modulesSize
+              
+              const yBase = layout.y + (layout.height - size) / 2
+              const y = yBase + (Number(qrCodeConfig.yOffset) || 0)
+              const x = Number(qrCodeConfig.x) || 950
+              
+              return {
+                name: 'g',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  transform: `translate(${x}, ${y}) scale(${scale})`
+                },
+                children: [
+                  {
+                    name: 'path',
+                    type: 'element',
+                    value: '',
+                    parent: null,
+                    attributes: {
+                      d: path,
+                      fill: qrCodeConfig.fill || '#000000'
+                    },
+                    children: []
+                  }
+                ]
+              }
+            })()
+          ]
         : []),
       ...(sessionBlock.timeBadge.show !== false && sessionBlock.timeBlock?.show !== false
         ? [
@@ -437,6 +477,28 @@ function getSpeakerMetrics(speakerConfig, speakerCount) {
   const blockHeight = fontSize + gap * (speakerCount - 1)
 
   return { blockHeight, fontSize, gap }
+}
+
+function getQRCodePath(text) {
+  try {
+    const qrc = qrcode.create(text, { margin: 0 })
+    const size = qrc.modules.size
+    const data = qrc.modules.data
+    let path = ''
+    
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
+        if (data[row * size + col]) {
+          path += `M ${col} ${row} h 1 v 1 h -1 Z `
+        }
+      }
+    }
+    console.log('[QR Code] Generated path length:', path.length, 'Size:', size)
+    return { path, modulesSize: size }
+  } catch (e) {
+    console.error('[QR Code] error:', e)
+    return { path: '', modulesSize: 1 }
+  }
 }
 
 function getFontSize(style, fallback) {

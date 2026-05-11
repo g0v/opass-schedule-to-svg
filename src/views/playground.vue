@@ -42,6 +42,7 @@ const sectionTabs = [
   { label: '類型', value: 'type', icon: 'M7 7h10M7 12h10M7 17h10' },
   { label: '議程', value: 'title', icon: 'M3 5h18M3 10h18M3 15h18M3 20h18' },
   { label: '講者', value: 'speaker', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+  { label: 'QR', value: 'qrCode', icon: 'M3 3h6v6H3V3z M15 3h6v6h-6V3z M3 15h6v6H3v-6z M15 15h6v6h-6v-6z' },
 ]
 
 const activeTypeTab = ref('zh')
@@ -64,6 +65,7 @@ const mockSessions = [
     en: { title: 'Opening Keynote' },
     type: 'K',
     speakers: ['s1'],
+    uri: 'https://opass.app/schedule/1'
   },
   {
     start: '2024-05-04T10:00:00+08:00',
@@ -72,6 +74,7 @@ const mockSessions = [
     en: { title: 'Deep Dive into Web Components' },
     type: 'P',
     speakers: ['s1', 's2'],
+    uri: 'https://opass.app/schedule/2'
   },
   {
     start: '2024-05-04T11:10:00+08:00',
@@ -80,6 +83,7 @@ const mockSessions = [
     en: { title: 'Impact of AI on SE' },
     type: 'W',
     speakers: ['s2'],
+    uri: 'https://opass.app/schedule/3'
   },
 ]
 
@@ -153,6 +157,10 @@ onMounted(async () => {
       if (conf.sessionBlock.titleZh && conf.sessionBlock.titleZh.show === undefined) conf.sessionBlock.titleZh.show = true
       if (conf.sessionBlock.titleEn && conf.sessionBlock.titleEn.show === undefined) conf.sessionBlock.titleEn.show = true
       if (conf.sessionBlock.speaker && conf.sessionBlock.speaker.show === undefined) conf.sessionBlock.speaker.show = true
+      if (conf.sessionBlock.qrCode === undefined) {
+        conf.sessionBlock.qrCode = { show: true, x: 950, yOffset: 0, size: 64, fill: "#000000" }
+      }
+      if (conf.sessionBlock.qrCode.show === undefined) conf.sessionBlock.qrCode.show = true
       if (conf.sessionBlock.sessionType === undefined) conf.sessionBlock.sessionType = { show: true, yOffset: 0, gap: 18 }
       if (conf.sessionBlock.sessionType.show === undefined) conf.sessionBlock.sessionType.show = true
       if (conf.sessionBlock.sessionTypeZh === undefined) {
@@ -753,6 +761,30 @@ const fillOptions = [
             <Control title="講者間距">
               <InputRange :min="0" :max="100" v-model.number="config.sessionBlock.speaker.gap" />
               <InputText isNumber v-model.number="config.sessionBlock.speaker.gap" />
+            </Control>
+          </div>
+        </div>
+      </ControlGroup>
+
+      <!-- QR Code Section -->
+      <ControlGroup v-if="config && activeSectionTab === 'qrCode'" title="QR Code 區塊" v-model:show="config.sessionBlock.qrCode.show" @reset="resetKeys(['sessionBlock.qrCode'])">
+        <div class="space-y-4">
+          <Control title="尺寸">
+            <InputRange :min="20" :max="200" v-model.number="config.sessionBlock.qrCode.size" />
+            <InputText isNumber v-model.number="config.sessionBlock.qrCode.size" />
+          </Control>
+          <Control title="顏色">
+            <InputColor v-model="config.sessionBlock.qrCode.fill" disableNone />
+          </Control>
+          <Control title="X 座標">
+            <InputRange :min="0" :max="1000" v-model.number="config.sessionBlock.qrCode.x" />
+            <InputText isNumber v-model.number="config.sessionBlock.qrCode.x" />
+          </Control>
+          
+          <div class="border-t border-slate-50 pt-5 space-y-4">
+            <Control title="區塊位移 (Y)">
+              <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.qrCode.yOffset" />
+              <InputText isNumber v-model.number="config.sessionBlock.qrCode.yOffset" />
             </Control>
           </div>
         </div>

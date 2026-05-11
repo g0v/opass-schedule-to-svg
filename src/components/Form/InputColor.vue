@@ -4,12 +4,17 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  disableNone: {
+    type: Boolean,
+    default: false,
+  }
 })
 
 const emit = defineEmits(['update:hasValue'])
 const model = defineModel()
 
 function setNone() {
+  if (props.disableNone) return
   emit('update:hasValue', false)
 }
 
@@ -26,7 +31,7 @@ function setFill() {
 
       <!-- Small "None" trigger at bottom-right/left -->
       <button
-        v-if="props.hasValue"
+        v-if="props.hasValue && !props.disableNone"
         type="button"
         @click.stop.prevent="setNone"
         class="absolute -bottom-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full border border-white bg-white shadow-sm transition-transform hover:scale-110"
