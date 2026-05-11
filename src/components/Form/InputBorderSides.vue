@@ -4,6 +4,10 @@ const props = defineProps({
     type: Array,
     default: () => ['top', 'bottom', 'left', 'right'],
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -16,6 +20,7 @@ const sides = [
 ]
 
 const toggleSide = id => {
+  if (props.disabled) return
   const newValue = [...props.modelValue]
   const index = newValue.indexOf(id)
   if (index > -1) {
@@ -36,7 +41,8 @@ const isActive = id => props.modelValue.includes(id)
       :key="side.id"
       type="button"
       @click="toggleSide(side.id)"
-      class="flex h-8 w-8 items-center justify-center rounded border transition-all"
+      :disabled="props.disabled"
+      class="flex h-8 w-8 items-center justify-center rounded border transition-all disabled:pointer-events-none disabled:opacity-40"
       :class="[isActive(side.id) ? 'active-side shadow-sm' : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600']"
       :title="`顯示${side.label}邊框`"
     >

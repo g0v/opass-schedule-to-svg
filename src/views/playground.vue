@@ -12,16 +12,50 @@ import InputCheckbox from '~/components/Form/InputCheckbox.vue'
 import InputTextarea from '~/components/Form/InputTextarea.vue'
 import InputBorderSides from '~/components/Form/InputBorderSides.vue'
 import InputCorners from '~/components/Form/InputCorners.vue'
+import InputSegmented from '~/components/Form/InputSegmented.vue'
 import fallbackConfig from '../../style.config.json'
 import { globalStore } from '../store.js'
 
 // Mock Data
 const mockSchedule = {
   speakers: [
-    { id: 's1', zh: { name: '講者A' }, en: { name: 'Speaker A' } },
-    { id: 's2', zh: { name: '講者B' }, en: { name: 'Speaker B' } },
+    { id: 's1', zh: { name: '黃豆豆' }, en: { name: 'Doudou Huang' } },
+    { id: 's2', zh: { name: '小馬哥' }, en: { name: 'Ma Bean' } },
+  ],
+  session_types: [
+    { id: 'K', zh: { name: '主題演講' }, en: { name: 'Keynote' } },
+    { id: 'P', zh: { name: '主題論壇' }, en: { name: 'Panel' } },
+    { id: 'W', zh: { name: '工作坊' }, en: { name: 'Workshop' } },
   ],
 }
+
+const activeTitleTab = ref('zh')
+const titleTabs = [
+  { label: '中文標題', value: 'zh' },
+  { label: '英文標題', value: 'en' },
+]
+
+const activeSectionTab = ref('layout')
+const sectionTabs = [
+  { label: '版面', value: 'layout', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
+  { label: '時間', value: 'time', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+  { label: '類型', value: 'type', icon: 'M7 7h10M7 12h10M7 17h10' },
+  { label: '議程', value: 'title', icon: 'M3 5h18M3 10h18M3 15h18M3 20h18' },
+  { label: '講者', value: 'speaker', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+  { label: 'QR', value: 'qrCode', icon: 'M3 3h6v6H3V3z M15 3h6v6h-6V3z M3 15h6v6H3v-6z M15 15h6v6h-6v-6z' },
+]
+
+const activeTypeTab = ref('zh')
+const typeSubTabs = [
+  { label: '中文類型', value: 'zh' },
+  { label: '英文類型', value: 'en' },
+]
+
+const activeTimeTab = ref('badge')
+const timeTabs = [
+  { label: '標籤樣式', value: 'badge' },
+  { label: '文字樣式', value: 'text' },
+]
 
 const mockSessions = [
   {
@@ -29,21 +63,27 @@ const mockSessions = [
     end: '2024-05-04T09:40:00+08:00',
     zh: { title: '開幕致詞' },
     en: { title: 'Opening Keynote' },
+    type: 'K',
     speakers: ['s1'],
+    uri: 'https://opass.app/schedule/1'
   },
   {
     start: '2024-05-04T10:00:00+08:00',
     end: '2024-05-04T11:00:00+08:00',
     zh: { title: '深入淺出 Web Components' },
     en: { title: 'Deep Dive into Web Components' },
+    type: 'P',
     speakers: ['s1', 's2'],
+    uri: 'https://opass.app/schedule/2'
   },
   {
     start: '2024-05-04T11:10:00+08:00',
     end: '2024-05-04T12:00:00+08:00',
     zh: { title: 'AI 對軟體工程的衝擊' },
     en: { title: 'Impact of AI on SE' },
+    type: 'W',
     speakers: ['s2'],
+    uri: 'https://opass.app/schedule/3'
   },
 ]
 
@@ -89,36 +129,68 @@ onMounted(async () => {
     globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(baseConfig)) // persist immediately
   }
 
+  const applyDefaults = (conf) => {
+    if (!conf) return
+    if (conf.autoRowHeight === undefined) conf.autoRowHeight = false
+    if (conf.sessionBlock === undefined) conf.sessionBlock = {}
+    if (conf.sessionBlock.yPadding === undefined) conf.sessionBlock.yPadding = 12
+
+    if (conf.sessionBlock) {
+      if (conf.sessionBlock.showTitle === undefined) conf.sessionBlock.showTitle = true
+      if (conf.sessionBlock.timeBadge && conf.sessionBlock.timeBadge.show === undefined) conf.sessionBlock.timeBadge.show = true
+      if (conf.sessionBlock.speaker && conf.sessionBlock.speaker.style === undefined) conf.sessionBlock.speaker.style = ''
+      if (conf.sessionBlock.background) {
+        if (!conf.sessionBlock.background.borderSides) conf.sessionBlock.background.borderSides = ['top', 'bottom', 'left', 'right']
+        if (conf.sessionBlock.background.hasFill === undefined) conf.sessionBlock.background.hasFill = true
+        if (conf.sessionBlock.background.hasStroke === undefined) conf.sessionBlock.background.hasStroke = true
+        if (conf.sessionBlock.background.show === undefined) conf.sessionBlock.background.show = true
+      }
+      if (conf.sessionBlock.timeBadge) {
+        if (conf.sessionBlock.timeBadge.hasFill === undefined) conf.sessionBlock.timeBadge.hasFill = true
+        if (conf.sessionBlock.timeBadge.show === undefined) conf.sessionBlock.timeBadge.show = true
+        if (conf.sessionBlock.timeBadge.roundedCorners === undefined) conf.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
+      }
+      if (conf.sessionBlock.timeBlock === undefined) conf.sessionBlock.timeBlock = { show: true, align: 'center', yOffset: 0 }
+      if (conf.sessionBlock.timeBlock.align === undefined) conf.sessionBlock.timeBlock.align = 'center'
+      if (conf.sessionBlock.timeBlock.show === undefined) conf.sessionBlock.timeBlock.show = true
+      if (conf.sessionBlock.titleBlock === undefined) conf.sessionBlock.titleBlock = { yOffset: 0, gap: 18 }
+      if (conf.sessionBlock.titleZh && conf.sessionBlock.titleZh.show === undefined) conf.sessionBlock.titleZh.show = true
+      if (conf.sessionBlock.titleEn && conf.sessionBlock.titleEn.show === undefined) conf.sessionBlock.titleEn.show = true
+      if (conf.sessionBlock.speaker && conf.sessionBlock.speaker.show === undefined) conf.sessionBlock.speaker.show = true
+      if (conf.sessionBlock.qrCode === undefined) {
+        conf.sessionBlock.qrCode = { show: true, x: 950, yOffset: 0, size: 64, fill: "#000000" }
+      }
+      if (conf.sessionBlock.qrCode.show === undefined) conf.sessionBlock.qrCode.show = true
+      if (conf.sessionBlock.sessionType === undefined) conf.sessionBlock.sessionType = { show: true, yOffset: 0, gap: 18 }
+      if (conf.sessionBlock.sessionType.show === undefined) conf.sessionBlock.sessionType.show = true
+      if (conf.sessionBlock.sessionTypeZh === undefined) {
+        conf.sessionBlock.sessionTypeZh = { show: true, x: 220, style: "font-family:'Noto Sans TC', sans-serif;font-weight:700;font-size:14px;fill:#8DA4BE" }
+      }
+      if (conf.sessionBlock.sessionTypeEn === undefined) {
+        conf.sessionBlock.sessionTypeEn = { show: true, x: 220, style: "font-family:'Noto Sans TC', sans-serif;font-weight:400;font-size:10px;fill:#8DA4BE" }
+      }
+      if (conf.sessionBlock.timeText && conf.sessionBlock.timeText.show === undefined) {
+        conf.sessionBlock.timeText.show = true
+      }
+    }
+  }
+
+  applyDefaults(baseConfig)
+  globalStore.playgroundBaseConfig = JSON.parse(JSON.stringify(baseConfig)) // persist immediately
+
   // defaultConfig = what we actually load (could be user's last edits)
   if (globalStore.playgroundWorkingConfig) {
     defaultConfig = JSON.parse(JSON.stringify(globalStore.playgroundWorkingConfig))
   } else {
     defaultConfig = JSON.parse(JSON.stringify(baseConfig))
   }
+  
+  applyDefaults(defaultConfig)
 
-  try {
-    // Ensure defaults for backward compatibility
-    if (defaultConfig.sessionBlock) {
-      if (defaultConfig.sessionBlock.timeBadge && defaultConfig.sessionBlock.timeBadge.show === undefined) {
-        defaultConfig.sessionBlock.timeBadge.show = true
-      }
-      if (defaultConfig.sessionBlock.speaker && defaultConfig.sessionBlock.speaker.style === undefined) {
-        defaultConfig.sessionBlock.speaker.style = ''
-      }
-      if (defaultConfig.sessionBlock.background && !defaultConfig.sessionBlock.background.borderSides) {
-        defaultConfig.sessionBlock.background.borderSides = ['top', 'bottom', 'left', 'right']
-      }
-      if (defaultConfig.sessionBlock.timeBadge) {
-        if (defaultConfig.sessionBlock.timeBadge.yOffset === undefined) defaultConfig.sessionBlock.timeBadge.yOffset = 0
-        if (defaultConfig.sessionBlock.timeBadge.roundedCorners === undefined) defaultConfig.sessionBlock.timeBadge.roundedCorners = ['tl', 'tr', 'br', 'bl']
-      }
-    }
 
-    config.value = JSON.parse(JSON.stringify(defaultConfig))
-    initialConfigStr = JSON.stringify(config.value)
-  } catch (e) {
-    console.error('Failed to load config', e)
-  }
+
+  config.value = JSON.parse(JSON.stringify(defaultConfig))
+  initialConfigStr = JSON.stringify(config.value)
 })
 
 // Watch config changes to regenerate SVG
@@ -179,6 +251,15 @@ const importConfig = event => {
         }
         if (imported.sessionBlock.speaker && imported.sessionBlock.speaker.style === undefined) {
           imported.sessionBlock.speaker.style = ''
+        }
+        if (imported.sessionBlock.background && imported.sessionBlock.background.hasFill === undefined) {
+          imported.sessionBlock.background.hasFill = true
+        }
+        if (imported.sessionBlock.background && imported.sessionBlock.background.hasStroke === undefined) {
+          imported.sessionBlock.background.hasStroke = true
+        }
+        if (imported.sessionBlock.timeBadge && imported.sessionBlock.timeBadge.hasFill === undefined) {
+          imported.sessionBlock.timeBadge.hasFill = true
         }
       }
 
@@ -358,12 +439,17 @@ const weightOptions = [
   { label: '800 - Extra Bold', value: '800' },
   { label: '900 - Black', value: '900' },
 ]
+
+const fillOptions = [
+  { label: '填色', value: true },
+  { label: '透明', value: false },
+]
 </script>
 
 <template>
   <div class="flex">
-    <div class="z-10 flex h-screen shrink-0 flex-col gap-6 overflow-y-auto border border-slate-300 p-6 shadow-xl" style="width: 400px">
-      <div>
+    <div class="z-10 flex h-screen shrink-0 flex-col border border-slate-300 shadow-xl" style="width: 400px;">
+      <div class="p-6 pb-0">
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <RouterLink
@@ -419,39 +505,68 @@ const weightOptions = [
           </button>
         </div>
 
-        <!-- Load Local Fonts Toggle -->
-        <div class="relative mt-4">
-          <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3" :class="{ 'opacity-40': isLocalFontsBlocked }">
-            <div class="flex flex-col">
-              <span class="text-sm font-bold text-gray-700">使用本機字型</span>
-              <span class="mt-0.5 text-xs text-gray-500">在下拉選單中顯示本機字型 (需授權)</span>
-            </div>
-            <div class="cursor-pointer" @click.capture.stop.prevent="toggleLocalFonts">
-              <InputCheckbox :modelValue="useLocalFonts" style="pointer-events: none" />
-            </div>
+        <div class="mt-4 flex items-center justify-between border-y border-slate-100 py-2 px-1">
+          <div class="flex items-center gap-2">
+            <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+            </svg>
+            <span class="text-[10px] font-medium text-slate-500 uppercase tracking-wider">本機字型</span>
           </div>
-
-          <!-- Blocked Overlay -->
-          <div v-if="isLocalFontsBlocked" class="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/40 backdrop-blur-[2px]">
-            <div class="flex items-center gap-2 rounded-full bg-slate-800/90 px-4 py-2 text-white shadow-xl backdrop-blur-sm">
-              <svg class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              <span class="text-xs font-medium tracking-wide">請至網址列重新開啟字型權限</span>
-            </div>
+          <div class="flex items-center gap-2">
+            <span v-if="isLocalFontsBlocked" class="text-[9px] text-amber-500 font-bold">需要權限 ⚠️</span>
+            <button 
+              @click="toggleLocalFonts"
+              class="relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out"
+              :class="useLocalFonts ? 'bg-blue-500' : 'bg-slate-200'"
+            >
+              <span 
+                class="pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out mt-0.5"
+                :class="useLocalFonts ? 'translate-x-3.5' : 'translate-x-0.5'"
+              ></span>
+            </button>
           </div>
         </div>
       </div>
 
+      <!-- Navigation Bar (Sticky/Fixed below header) -->
+      <div class="border-b border-slate-200 bg-white px-6 py-2">
+        <div class="flex justify-between gap-1">
+          <button
+            v-for="tab in sectionTabs"
+            :key="tab.value"
+            @click="activeSectionTab = tab.value"
+            class="flex flex-col items-center gap-1 grow rounded-lg py-2 transition-all"
+            :class="activeSectionTab === tab.value ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" :d="tab.icon" />
+            </svg>
+            <span class="text-[10px] font-bold">{{ tab.label }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Property Content Area (Scrollable) -->
+      <div class="grow overflow-y-auto p-6 flex flex-col gap-6" style="scrollbar-gutter: stable;">
+
       <!-- Global Layout -->
-      <ControlGroup v-if="config" title="版面設定" @reset="resetKeys(['rowHeight', 'svgWidth'])">
-        <Control title="行高">
+      <ControlGroup v-if="config && activeSectionTab === 'layout'" title="版面設定" @reset="resetKeys(['autoRowHeight', 'rowHeight', 'sessionBlock.yPadding', 'svgWidth'])">
+        <Control title="行高模式">
+          <InputSegmented 
+            v-model="config.autoRowHeight" 
+            :options="[
+              { label: '固定高度', value: false },
+              { label: '隨內容增長', value: true }
+            ]" 
+          />
+        </Control>
+        <Control title="固定行高" v-if="!config.autoRowHeight">
           <InputRange :min="50" :max="300" v-model.number="config.rowHeight" />
           <InputText isNumber v-model.number="config.rowHeight" />
+        </Control>
+        <Control title="上下留白" v-if="config.autoRowHeight">
+          <InputRange :min="0" :max="100" v-model.number="config.sessionBlock.yPadding" />
+          <InputText isNumber v-model.number="config.sessionBlock.yPadding" />
         </Control>
         <Control title="寬度">
           <InputRange :min="300" :max="2000" v-model.number="config.svgWidth" />
@@ -459,127 +574,291 @@ const weightOptions = [
         </Control>
       </ControlGroup>
 
-      <!-- Session Block Layout -->
-      <ControlGroup v-if="config" title="議程區塊樣式" @reset="resetKeys(['sessionBlock.background'])">
+      <!-- Session Block Layout (Merged) -->
+      <ControlGroup v-if="config && activeSectionTab === 'layout'" title="議程區塊樣式" v-model:show="config.sessionBlock.background.show" @reset="resetKeys(['sessionBlock.background'])">
         <Control title="背景顏色">
-          <InputColor v-model="config.sessionBlock.background.fill" />
-          <InputText v-model="config.sessionBlock.background.fill" />
+          <InputColor v-model="config.sessionBlock.background.fill" v-model:hasValue="config.sessionBlock.background.hasFill" />
+          <InputText v-model="config.sessionBlock.background.fill" :disabled="!config.sessionBlock.background.hasFill" />
         </Control>
         <Control title="邊框顏色">
-          <InputColor v-model="config.sessionBlock.background.stroke" />
-          <InputText v-model="config.sessionBlock.background.stroke" />
+          <InputColor v-model="config.sessionBlock.background.stroke" v-model:hasValue="config.sessionBlock.background.hasStroke" />
+          <InputText v-model="config.sessionBlock.background.stroke" :disabled="!config.sessionBlock.background.hasStroke" />
         </Control>
         <Control title="邊框顯示">
-          <InputBorderSides v-model="config.sessionBlock.background.borderSides" />
+          <InputBorderSides v-model="config.sessionBlock.background.borderSides" :disabled="!config.sessionBlock.background.hasStroke" />
         </Control>
       </ControlGroup>
 
-      <!-- Time Badge Section -->
-      <ControlGroup v-if="config" title="時間標籤區塊" @reset="resetKeys(['sessionBlock.timeBadge', 'sessionBlock.timeText'])">
-        <Control title="標籤樣式">
-          <InputCheckbox v-model="config.sessionBlock.timeBadge.show" />
-        </Control>
 
-        <template v-if="config.sessionBlock.timeBadge.show !== false">
-          <Control title="背景顏色">
-            <InputColor v-model="config.sessionBlock.timeBadge.fill" />
-            <InputText v-model="config.sessionBlock.timeBadge.fill" />
-          </Control>
-          <Control title="X 座標">
-            <InputRange :min="0" :max="500" :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
-            <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
-          </Control>
-          <Control title="Y 偏移">
-            <InputRange :min="-100" :max="100" :step="1" v-model.number="config.sessionBlock.timeBadge.yOffset" />
-            <InputText isNumber v-model.number="config.sessionBlock.timeBadge.yOffset" />
-          </Control>
-          <Control title="寬度">
-            <InputRange :min="10" :max="300" :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
-            <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
-          </Control>
-          <Control title="高度">
-            <InputRange :min="10" :max="100" :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
-            <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
-          </Control>
-          <Control title="圓角位置">
-            <InputCorners v-model="config.sessionBlock.timeBadge.roundedCorners" />
-          </Control>
-          <Control title="圓角 RX">
-            <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.timeBadge.rx" />
-            <InputText isNumber v-model.number="config.sessionBlock.timeBadge.rx" />
-          </Control>
-          <Control title="圓角 RY">
-            <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.timeBadge.ry" />
-            <InputText isNumber v-model.number="config.sessionBlock.timeBadge.ry" />
-          </Control>
-        </template>
-        <div class="mt-4 border-t border-slate-100 pt-4">
-          <h4 class="mb-3 shrink-0 text-sm font-bold text-gray-600">時間</h4>
-          <StyleInput :obj="config.sessionBlock.timeText" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
-          <StyleInput :obj="config.sessionBlock.timeText" prop="fill" type="color" label="文字顏色" />
-          <StyleInput :obj="config.sessionBlock.timeText" prop="font-family" type="select" :options="fontOptions" label="字型" />
-          <StyleInput :obj="config.sessionBlock.timeText" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+      <!-- Time Badge Section -->
+      <ControlGroup v-if="config && activeSectionTab === 'time'" title="時間標籤區塊" v-model:show="config.sessionBlock.timeBlock.show" @reset="resetKeys(['sessionBlock.timeBadge', 'sessionBlock.timeText', 'sessionBlock.timeBlock'])">
+        <div class="space-y-4">
+          <InputSegmented 
+            v-model="activeTimeTab" 
+            :options="[
+              { 
+                label: '標籤樣式', 
+                value: 'badge',
+                show: config.sessionBlock.timeBadge.show,
+                onToggle: () => config.sessionBlock.timeBadge.show = !config.sessionBlock.timeBadge.show
+              },
+              { 
+                label: '文字樣式', 
+                value: 'text',
+                show: config.sessionBlock.timeText.show,
+                onToggle: () => config.sessionBlock.timeText.show = !config.sessionBlock.timeText.show
+              }
+            ]" 
+          />
+          
+          <div class="min-h-[300px] border-t border-slate-50 pt-5 space-y-4">
+            <!-- Badge Style Panel -->
+            <div v-if="activeTimeTab === 'badge'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.timeBadge.show }">
+              <Control title="背景顏色">
+                <InputColor v-model="config.sessionBlock.timeBadge.fill" disableNone />
+                <InputText v-model="config.sessionBlock.timeBadge.fill" />
+              </Control>
+              <Control title="X 座標">
+                <InputRange :min="0" :max="500" :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
+                <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.x" />
+              </Control>
+              <Control title="寬度">
+                <InputRange :min="10" :max="300" :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
+                <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.width" />
+              </Control>
+              <Control title="高度">
+                <InputRange :min="10" :max="100" :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
+                <InputText isNumber :step="0.1" v-model.number="config.sessionBlock.timeBadge.height" />
+              </Control>
+              <Control title="圓角位置">
+                <InputCorners v-model="config.sessionBlock.timeBadge.roundedCorners" />
+              </Control>
+              <Control title="圓角 RX">
+                <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.timeBadge.rx" />
+                <InputText isNumber v-model.number="config.sessionBlock.timeBadge.rx" />
+              </Control>
+              <Control title="圓角 RY">
+                <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.timeBadge.ry" />
+                <InputText isNumber v-model.number="config.sessionBlock.timeBadge.ry" />
+              </Control>
+            </div>
+
+            <!-- Text Style Panel -->
+            <div v-if="activeTimeTab === 'text'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.timeText.show }">
+              <StyleInput :obj="config.sessionBlock.timeText" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+              <StyleInput :obj="config.sessionBlock.timeText" prop="fill" type="color" label="文字顏色" />
+              <StyleInput :obj="config.sessionBlock.timeText" prop="font-family" type="select" :options="fontOptions" label="字型" />
+              <StyleInput :obj="config.sessionBlock.timeText" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+            </div>
+
+            <!-- Empty State Warning when hidden -->
+            <div v-if="(activeTimeTab === 'badge' && !config.sessionBlock.timeBadge.show) || (activeTimeTab === 'text' && !config.sessionBlock.timeText.show)" class="py-4 text-center border-b border-slate-50">
+               <p class="text-[10px] text-slate-400">目前已隱藏時間{{ activeTimeTab === 'badge' ? '標籤背景' : '文字' }}，點擊上方眼睛圖示開啟</p>
+            </div>
+
+            <div class="border-t border-slate-50 pt-5 space-y-4">
+              <Control title="垂直對齊">
+                <InputSegmented 
+                  v-model="config.sessionBlock.timeBlock.align" 
+                  :options="[
+                    { label: '置中', value: 'center' },
+                    { label: '靠上', value: 'top' }
+                  ]" 
+                />
+              </Control>
+              <Control title="區塊位移 (Y)">
+                <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.timeBlock.yOffset" />
+                <InputText isNumber v-model.number="config.sessionBlock.timeBlock.yOffset" />
+              </Control>
+            </div>
+          </div>
         </div>
       </ControlGroup>
 
       <!-- Session Title Section -->
-      <ControlGroup v-if="config" title="議程名字區塊" @reset="resetKeys(['sessionBlock.titleZh', 'sessionBlock.titleEn'])">
-        <h4 class="mb-3 shrink-0 text-sm font-bold text-gray-600">中文標題 (Zh)</h4>
-        <StyleInput :obj="config.sessionBlock.titleZh" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
-        <StyleInput :obj="config.sessionBlock.titleZh" prop="fill" type="color" label="文字顏色" />
-        <StyleInput :obj="config.sessionBlock.titleZh" prop="font-family" type="select" :options="fontOptions" label="字型" />
-        <StyleInput :obj="config.sessionBlock.titleZh" prop="font-weight" type="select" :options="weightOptions" label="字重" />
-        <Control title="X 座標">
-          <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.titleZh.x" />
-          <InputText isNumber v-model.number="config.sessionBlock.titleZh.x" />
-        </Control>
-        <Control title="Y 位移">
-          <InputRange :min="0" :max="150" v-model.number="config.sessionBlock.titleZh.yOffset" />
-          <InputText isNumber v-model.number="config.sessionBlock.titleZh.yOffset" />
-        </Control>
+      <ControlGroup v-if="config && activeSectionTab === 'title'" title="議程名字區塊" v-model:show="config.sessionBlock.showTitle" @reset="resetKeys(['sessionBlock.titleZh', 'sessionBlock.titleEn', 'sessionBlock.titleBlock'])">
+        <div class="space-y-4">
+          <!-- Premium Tab Switcher -->
+          <InputSegmented 
+            v-model="activeTitleTab" 
+            :options="[
+              { 
+                label: '中文標題', 
+                value: 'zh',
+                show: config.sessionBlock.titleZh.show,
+                onToggle: () => config.sessionBlock.titleZh.show = !config.sessionBlock.titleZh.show
+              },
+              { 
+                label: '英文標題', 
+                value: 'en',
+                show: config.sessionBlock.titleEn.show,
+                onToggle: () => config.sessionBlock.titleEn.show = !config.sessionBlock.titleEn.show
+              }
+            ]" 
+          />
+          
+          <div class="min-h-[300px] border-t border-slate-50 pt-5 space-y-4">
+            <!-- Zh Panel -->
+            <div v-if="activeTitleTab === 'zh'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.titleZh.show }">
+              <StyleInput :obj="config.sessionBlock.titleZh" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+              <StyleInput :obj="config.sessionBlock.titleZh" prop="fill" type="color" label="文字顏色" />
+              <StyleInput :obj="config.sessionBlock.titleZh" prop="font-family" type="select" :options="fontOptions" label="字型" />
+              <StyleInput :obj="config.sessionBlock.titleZh" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+              <Control title="X 座標">
+                <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.titleZh.x" />
+                <InputText isNumber v-model.number="config.sessionBlock.titleZh.x" />
+              </Control>
+            </div>
 
-        <h4 class="mb-3 shrink-0 text-sm font-bold text-gray-600">英文標題 (En)</h4>
-        <StyleInput :obj="config.sessionBlock.titleEn" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
-        <StyleInput :obj="config.sessionBlock.titleEn" prop="fill" type="color" label="文字顏色" />
-        <StyleInput :obj="config.sessionBlock.titleEn" prop="font-family" type="select" :options="fontOptions" label="字型" />
-        <StyleInput :obj="config.sessionBlock.titleEn" prop="font-weight" type="select" :options="weightOptions" label="字重" />
-        <Control title="X 座標">
-          <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.titleEn.x" />
-          <InputText isNumber v-model.number="config.sessionBlock.titleEn.x" />
-        </Control>
-        <Control title="Y 位移">
-          <InputRange :min="0" :max="150" v-model.number="config.sessionBlock.titleEn.yOffset" />
-          <InputText isNumber v-model.number="config.sessionBlock.titleEn.yOffset" />
-        </Control>
+            <!-- En Panel -->
+            <div v-if="activeTitleTab === 'en'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.titleEn.show }">
+              <StyleInput :obj="config.sessionBlock.titleEn" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+              <StyleInput :obj="config.sessionBlock.titleEn" prop="fill" type="color" label="文字顏色" />
+              <StyleInput :obj="config.sessionBlock.titleEn" prop="font-family" type="select" :options="fontOptions" label="字型" />
+              <StyleInput :obj="config.sessionBlock.titleEn" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+              <Control title="X 座標">
+                <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.titleEn.x" />
+                <InputText isNumber v-model.number="config.sessionBlock.titleEn.x" />
+              </Control>
+            </div>
+
+            <!-- Empty State Warning when hidden -->
+            <div v-if="(activeTitleTab === 'zh' && !config.sessionBlock.titleZh.show) || (activeTitleTab === 'en' && !config.sessionBlock.titleEn.show)" class="py-4 text-center">
+               <p class="text-[10px] text-slate-400">目前已隱藏{{ activeTitleTab === 'zh' ? '中文' : '英文' }}標題，點擊上方眼睛圖示開啟</p>
+            </div>
+
+            <div class="border-t border-slate-50 pt-5 space-y-4">
+              <Control title="區塊位移 (Y)">
+                <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.titleBlock.yOffset" />
+                <InputText isNumber v-model.number="config.sessionBlock.titleBlock.yOffset" />
+              </Control>
+              <Control title="文字間距">
+                <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.titleBlock.gap" />
+                <InputText isNumber v-model.number="config.sessionBlock.titleBlock.gap" />
+              </Control>
+            </div>
+          </div>
+        </div>
       </ControlGroup>
 
       <!-- Speaker Section -->
-      <ControlGroup v-if="config" title="講者區塊" @reset="resetKeys(['sessionBlock.speaker'])">
-        <StyleInput :obj="config.sessionBlock.speaker" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
-        <StyleInput :obj="config.sessionBlock.speaker" prop="fill" type="color" label="文字顏色" />
-        <StyleInput :obj="config.sessionBlock.speaker" prop="font-family" type="select" :options="fontOptions" label="字型" />
-        <StyleInput :obj="config.sessionBlock.speaker" prop="font-weight" type="select" :options="weightOptions" label="字重" />
-        <Control title="X 座標">
-          <InputRange :min="0" :max="1000" v-model.number="config.sessionBlock.speaker.x" />
-          <InputText isNumber v-model.number="config.sessionBlock.speaker.x" />
-        </Control>
-        <Control title="行高">
-          <InputRange :min="10" :max="60" v-model.number="config.sessionBlock.speaker.lineHeight" />
-          <InputText isNumber v-model.number="config.sessionBlock.speaker.lineHeight" />
-        </Control>
-        <Control title="DY">
-          <InputRange :min="10" :max="60" v-model.number="config.sessionBlock.speaker.dy" />
-          <InputText isNumber v-model.number="config.sessionBlock.speaker.dy" />
-        </Control>
-        <Control title="Y 邊距">
-          <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.speaker.yPadding" />
-          <InputText isNumber v-model.number="config.sessionBlock.speaker.yPadding" />
-        </Control>
+      <ControlGroup v-if="config && activeSectionTab === 'speaker'" title="講者區塊" v-model:show="config.sessionBlock.speaker.show" @reset="resetKeys(['sessionBlock.speaker'])">
+        <div class="space-y-4">
+          <StyleInput :obj="config.sessionBlock.speaker" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+          <StyleInput :obj="config.sessionBlock.speaker" prop="fill" type="color" label="文字顏色" />
+          <StyleInput :obj="config.sessionBlock.speaker" prop="font-family" type="select" :options="fontOptions" label="字型" />
+          <StyleInput :obj="config.sessionBlock.speaker" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+          <Control title="X 座標">
+            <InputRange :min="0" :max="1000" v-model.number="config.sessionBlock.speaker.x" />
+            <InputText isNumber v-model.number="config.sessionBlock.speaker.x" />
+          </Control>
+          
+          <div class="border-t border-slate-50 pt-5 space-y-4">
+            <Control title="區塊位移 (Y)">
+              <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.speaker.yOffset" />
+              <InputText isNumber v-model.number="config.sessionBlock.speaker.yOffset" />
+            </Control>
+            <Control title="講者間距">
+              <InputRange :min="0" :max="100" v-model.number="config.sessionBlock.speaker.gap" />
+              <InputText isNumber v-model.number="config.sessionBlock.speaker.gap" />
+            </Control>
+          </div>
+        </div>
       </ControlGroup>
 
-      <ControlGroup v-if="config" title="CSS 樣式" @reset="resetKeys(['css'])">
+      <!-- QR Code Section -->
+      <ControlGroup v-if="config && activeSectionTab === 'qrCode'" title="QR Code 區塊" v-model:show="config.sessionBlock.qrCode.show" @reset="resetKeys(['sessionBlock.qrCode'])">
+        <div class="space-y-4">
+          <Control title="尺寸">
+            <InputRange :min="20" :max="200" v-model.number="config.sessionBlock.qrCode.size" />
+            <InputText isNumber v-model.number="config.sessionBlock.qrCode.size" />
+          </Control>
+          <Control title="顏色">
+            <InputColor v-model="config.sessionBlock.qrCode.fill" disableNone />
+          </Control>
+          <Control title="X 座標">
+            <InputRange :min="0" :max="1000" v-model.number="config.sessionBlock.qrCode.x" />
+            <InputText isNumber v-model.number="config.sessionBlock.qrCode.x" />
+          </Control>
+          
+          <div class="border-t border-slate-50 pt-5 space-y-4">
+            <Control title="區塊位移 (Y)">
+              <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.qrCode.yOffset" />
+              <InputText isNumber v-model.number="config.sessionBlock.qrCode.yOffset" />
+            </Control>
+          </div>
+        </div>
+      </ControlGroup>
+
+      <!-- Session Type Section -->
+      <ControlGroup v-if="config && activeSectionTab === 'type'" title="議程類型區塊" v-model:show="config.sessionBlock.sessionType.show" @reset="resetKeys(['sessionBlock.sessionTypeZh', 'sessionBlock.sessionTypeEn', 'sessionBlock.sessionType'])">
+        <div class="space-y-4">
+          <InputSegmented 
+            v-model="activeTypeTab" 
+            :options="[
+              { 
+                label: '中文類型', 
+                value: 'zh',
+                show: config.sessionBlock.sessionTypeZh.show,
+                onToggle: () => config.sessionBlock.sessionTypeZh.show = !config.sessionBlock.sessionTypeZh.show
+              },
+              { 
+                label: '英文類型', 
+                value: 'en',
+                show: config.sessionBlock.sessionTypeEn.show,
+                onToggle: () => config.sessionBlock.sessionTypeEn.show = !config.sessionBlock.sessionTypeEn.show
+              }
+            ]" 
+          />
+          
+          <div class="min-h-[300px] border-t border-slate-50 pt-5 space-y-4">
+            <!-- Zh Panel -->
+            <div v-if="activeTypeTab === 'zh'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.sessionTypeZh.show }">
+              <StyleInput :obj="config.sessionBlock.sessionTypeZh" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeZh" prop="fill" type="color" label="文字顏色" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeZh" prop="font-family" type="select" :options="fontOptions" label="字型" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeZh" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+              <Control title="X 座標">
+                <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.sessionTypeZh.x" />
+                <InputText isNumber v-model.number="config.sessionBlock.sessionTypeZh.x" />
+              </Control>
+            </div>
+
+            <!-- En Panel -->
+            <div v-if="activeTypeTab === 'en'" class="space-y-4" :class="{ 'opacity-40 pointer-events-none grayscale-[0.5]': !config.sessionBlock.sessionTypeEn.show }">
+              <StyleInput :obj="config.sessionBlock.sessionTypeEn" prop="font-size" unit="px" type="range" min="10" max="60" label="字體大小" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeEn" prop="fill" type="color" label="文字顏色" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeEn" prop="font-family" type="select" :options="fontOptions" label="字型" />
+              <StyleInput :obj="config.sessionBlock.sessionTypeEn" prop="font-weight" type="select" :options="weightOptions" label="字重" />
+              <Control title="X 座標">
+                <InputRange :min="0" :max="800" v-model.number="config.sessionBlock.sessionTypeEn.x" />
+                <InputText isNumber v-model.number="config.sessionBlock.sessionTypeEn.x" />
+              </Control>
+            </div>
+
+            <!-- Empty State Warning when hidden -->
+            <div v-if="(activeTypeTab === 'zh' && !config.sessionBlock.sessionTypeZh.show) || (activeTypeTab === 'en' && !config.sessionBlock.sessionTypeEn.show)" class="py-4 text-center">
+               <p class="text-[10px] text-slate-400">目前已隱藏{{ activeTypeTab === 'zh' ? '中文' : '英文' }}類型，點擊上方眼睛圖示開啟</p>
+            </div>
+
+            <div class="border-t border-slate-50 pt-5 space-y-4">
+              <Control title="區塊位移 (Y)">
+                <InputRange :min="-100" :max="100" v-model.number="config.sessionBlock.sessionType.yOffset" />
+                <InputText isNumber v-model.number="config.sessionBlock.sessionType.yOffset" />
+              </Control>
+              <Control title="文字間距">
+                <InputRange :min="0" :max="50" v-model.number="config.sessionBlock.sessionType.gap" />
+                <InputText isNumber v-model.number="config.sessionBlock.sessionType.gap" />
+              </Control>
+            </div>
+          </div>
+        </div>
+      </ControlGroup>
+
+      <ControlGroup v-if="config && activeSectionTab === 'layout'" title="CSS 樣式" @reset="resetKeys(['css'])">
         <InputTextarea v-model="config.css" />
       </ControlGroup>
+      </div>
     </div>
 
     <div class="h-screen grow overflow-auto bg-gray-100 p-6">

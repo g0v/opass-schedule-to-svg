@@ -1,8 +1,13 @@
 import { formatTime } from '../../utils/formatTime.js'
 import { layoutWithLines, prepareWithSegments } from '@chenglou/pretext'
+import * as qrcodeModule from 'qrcode'
+const qrcode = qrcodeModule.default || qrcodeModule
 
-export function scheduleItemTemplate(session, speakerList, config, layout) {
+export function scheduleItemTemplate(session, schedule, config, layout) {
+  const speakerList = schedule.speakers
+  const sessionTypes = schedule.session_types || []
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
+  const sessionTypeData = sessionTypes.find(t => t.id === session.type)
   const { svgWidth, sessionBlock } = config
   const titleLayout = layout.titleLayout
   const timeTextStyle = normalizeTextStyle(sessionBlock.timeText.style)
@@ -20,24 +25,31 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
       height: 'sessionHeight',
     },
     children: [
-      {
-        name: 'rect',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {
-          y: layout.y,
-          width: svgWidth,
-          height: layout.height,
-          stroke: sessionBlock.background.borderSides && sessionBlock.background.borderSides.length === 4 ? sessionBlock.background.stroke : 'none',
-          fill: sessionBlock.background.fill,
-        },
-        children: [],
-      },
-      ...(sessionBlock.background.borderSides && sessionBlock.background.borderSides.length < 4
+      ...(sessionBlock.background.show !== false
+        ? [
+            {
+              name: 'rect',
+              type: 'element',
+              value: '',
+              parent: null,
+              attributes: {
+                y: layout.y,
+                width: svgWidth,
+                height: layout.height,
+                stroke:
+                  sessionBlock.background.hasStroke !== false && sessionBlock.background.borderSides && sessionBlock.background.borderSides.length === 4
+                    ? sessionBlock.background.stroke
+                    : 'none',
+                fill: sessionBlock.background.hasFill !== false ? sessionBlock.background.fill : 'none',
+              },
+              children: [],
+            },
+          ]
+        : []),
+      ...(sessionBlock.background.show !== false && sessionBlock.background.borderSides && sessionBlock.background.borderSides.length < 4
         ? sessionBlock.background.borderSides.map(side => {
             const attributes = {
-              stroke: sessionBlock.background.stroke,
+              stroke: sessionBlock.background.hasStroke !== false ? sessionBlock.background.stroke : 'none',
               'stroke-width': 1, // Default stroke width
             }
             if (side === 'top') {
@@ -71,11 +83,48 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
             }
           })
         : []),
-      ...(sessionBlock.timeBadge.show !== false
+      ...(sessionBlock.qrCode?.show !== false && session.uri
+        ? [
+            (() => {
+              const qrCodeConfig = sessionBlock.qrCode || { size: 64, x: 950, yOffset: 0, fill: '#000000' }
+              const size = Number(qrCodeConfig.size) || 64
+              const text = session.uri
+              const { path, modulesSize } = getQRCodePath(text)
+              const scale = size / modulesSize
+              
+              const yBase = layout.y + (layout.height - size) / 2
+              const y = yBase + (Number(qrCodeConfig.yOffset) || 0)
+              const x = Number(qrCodeConfig.x) || 950
+              
+              return {
+                name: 'g',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  transform: `translate(${x}, ${y}) scale(${scale})`
+                },
+                children: [
+                  {
+                    name: 'path',
+                    type: 'element',
+                    value: '',
+                    parent: null,
+                    attributes: {
+                      d: path,
+                      fill: qrCodeConfig.fill || '#000000'
+                    },
+                    children: []
+                  }
+                ]
+              }
+            })()
+          ]
+        : []),
+      ...(sessionBlock.timeBadge.show !== false && sessionBlock.timeBlock?.show !== false
         ? [
             (() => {
               const x = parseFloat(sessionBlock.timeBadge.x)
-              const y = layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + (sessionBlock.timeBadge.yOffset || 0)
               const w = parseFloat(sessionBlock.timeBadge.width)
               const h = parseFloat(sessionBlock.timeBadge.height)
               const rx = parseFloat(sessionBlock.timeBadge.rx) || 0
@@ -88,139 +137,253 @@ export function scheduleItemTemplate(session, speakerList, config, layout) {
                 value: '',
                 parent: null,
                 attributes: {
-                  d: generateRoundedRectPath(x, y, w, h, rx, ry, corners),
-                  fill: sessionBlock.timeBadge.fill,
+                  d: generateRoundedRectPath(
+                    parseFloat(sessionBlock.timeBadge.x), 
+                    (() => {
+                      const h = parseFloat(sessionBlock.timeBadge.height)
+                      const align = sessionBlock.timeBlock?.align || 'center'
+                      const yBase = align === 'top' 
+                        ? layout.y
+                        : layout.y + (layout.height - h) / 2
+                      return yBase + (sessionBlock.timeBlock?.yOffset ?? 0)
+                    })(), 
+                    parseFloat(sessionBlock.timeBadge.width), 
+                    parseFloat(sessionBlock.timeBadge.height), 
+                    parseFloat(sessionBlock.timeBadge.rx), 
+                    parseFloat(sessionBlock.timeBadge.ry), 
+                    sessionBlock.timeBadge.roundedCorners || ['tl', 'tr', 'br', 'bl']
+                  ),
+                  fill: sessionBlock.timeBadge.hasFill !== false ? sessionBlock.timeBadge.fill : 'none',
                 },
                 children: [],
               }
             })(),
           ]
         : []),
-      {
-        name: 'text',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {
-          x: sessionBlock.timeBadge.show !== false ? parseFloat(sessionBlock.timeBadge.x) + parseFloat(sessionBlock.timeBadge.width) / 2 : sessionBlock.timeText.x,
-          y: (() => {
-            const centerY =
-              sessionBlock.timeBadge.show !== false
-                ? layout.y + (layout.height - parseFloat(sessionBlock.timeBadge.height)) / 2 + parseFloat(sessionBlock.timeBadge.height) / 2
-                : layout.y + layout.height / 2
+      ...(sessionBlock.timeText.show !== false && sessionBlock.timeBlock?.show !== false
+        ? [
+            {
+              name: 'text',
+              type: 'element',
+              value: '',
+              parent: null,
+              attributes: {
+                x: sessionBlock.timeBadge.show !== false ? parseFloat(sessionBlock.timeBadge.x) + parseFloat(sessionBlock.timeBadge.width) / 2 : sessionBlock.timeText.x,
+                y: (() => {
+                  const blockYOffset = sessionBlock.timeBlock?.yOffset ?? 0
+                  const align = sessionBlock.timeBlock?.align || 'center'
+                  const badgeHeight = parseFloat(sessionBlock.timeBadge.height) || 36.8
 
-            // Try to extract font-size to calculate baseline offset (approx 0.35-0.4em)
-            const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/)
-            const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24
-            const baselineOffset = fontSize * 0.35
+                  const centerYBase = align === 'top'
+                    ? layout.y + badgeHeight / 2
+                    : layout.y + (layout.height / 2)
 
-            return centerY + baselineOffset + (sessionBlock.timeText.yOffset || 0) + (sessionBlock.timeBadge.yOffset || 0)
-          })(),
-          class: 'time',
-          'text-anchor': 'middle',
-          style: timeTextStyle,
-        },
-        children: [
-          {
-            name: '',
-            type: 'text',
-            value: formatTime(session.start),
-            parent: null,
-            attributes: {},
-            children: [],
-          },
-        ],
-      },
-      {
-        name: 'g',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {},
-        children: titleLayout.zhLines.map((line, index) => ({
-          name: 'text',
-          type: 'element',
-          value: '',
-          parent: null,
-          attributes: {
-            x: sessionBlock.titleZh.x,
-            y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.topY, titleLayout.zhFontSize, titleLayout.zhLineHeight, index),
-            class: 'title',
-            style: titleZhStyle,
-          },
-          children: [
+                  const centerY = centerYBase + blockYOffset
+
+                  // Try to extract font-size to calculate baseline offset (approx 0.35-0.4em)
+                  const fontSizeMatch = sessionBlock.timeText.style.match(/font-size:([\d.]+)px/)
+                  const fontSize = fontSizeMatch ? parseFloat(fontSizeMatch[1]) : 24
+                  const baselineOffset = fontSize * 0.35
+
+                  return centerY + baselineOffset
+                })(),
+                class: 'time',
+                'text-anchor': 'middle',
+                style: timeTextStyle,
+              },
+              children: [
+                {
+                  name: '',
+                  type: 'text',
+                  value: formatTime(session.start),
+                  parent: null,
+                  attributes: {},
+                  children: [],
+                },
+              ],
+            },
+          ]
+        : []),
+      ...(sessionBlock.showTitle !== false && sessionBlock.titleZh.show !== false
+        ? [
             {
-              name: '',
-              type: 'text',
-              value: line,
+              name: 'g',
+              type: 'element',
+              value: '',
               parent: null,
               attributes: {},
-              children: [],
+              children: titleLayout.zhLines.map((line, index) => ({
+                name: 'text',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  x: sessionBlock.titleZh.x,
+                  y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.topY, titleLayout.zhFontSize, titleLayout.zhLineHeight, index),
+                  class: 'title',
+                  style: titleZhStyle,
+                },
+                children: [
+                  {
+                    name: '',
+                    type: 'text',
+                    value: line,
+                    parent: null,
+                    attributes: {},
+                    children: [],
+                  },
+                ],
+              })),
             },
-          ],
-        })),
-      },
-      {
-        name: 'g',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {},
-        children: titleLayout.enLines.map((line, index) => ({
-          name: 'text',
-          type: 'element',
-          value: '',
-          parent: null,
-          attributes: {
-            x: sessionBlock.titleEn.x,
-            y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.enTopY, titleLayout.enFontSize, titleLayout.enLineHeight, index),
-            class: 'title',
-            style: titleEnStyle,
-          },
-          children: [
+          ]
+        : []),
+      ...(sessionBlock.showTitle !== false && sessionBlock.titleEn.show !== false
+        ? [
             {
-              name: '',
-              type: 'text',
-              value: line,
+              name: 'g',
+              type: 'element',
+              value: '',
               parent: null,
               attributes: {},
-              children: [],
+              children: titleLayout.enLines.map((line, index) => ({
+                name: 'text',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  x: sessionBlock.titleEn.x,
+                  y: getTextLineY(layout.y, layout.height, titleLayout.blockHeight, titleLayout.enTopY, titleLayout.enFontSize, titleLayout.enLineHeight, index),
+                  class: 'title',
+                  style: titleEnStyle,
+                },
+                children: [
+                  {
+                    name: '',
+                    type: 'text',
+                    value: line,
+                    parent: null,
+                    attributes: {},
+                    children: [],
+                  },
+                ],
+              })),
             },
-          ],
-        })),
-      },
-      {
-        name: 'g',
-        type: 'element',
-        value: '',
-        parent: null,
-        attributes: {},
-        children: speakers.map((speaker, index) => ({
-          name: 'text',
-          type: 'element',
-          value: '',
-          parent: null,
-          attributes: {
-            x: sessionBlock.speaker.x,
-            y: getSpeakerY(layout.y, layout.height, sessionBlock.speaker, speakers.length, index),
-            class: 'speaker',
-            style: speakerStyle,
-          },
-          children: [
+          ]
+        : []),
+      ...(sessionBlock.speaker.show !== false
+        ? [
             {
-              name: '',
-              type: 'text',
-              value: speaker.zh.name,
+              name: 'g',
+              type: 'element',
+              value: '',
               parent: null,
               attributes: {},
-              children: [],
+              children: speakers.map((speaker, index) => ({
+                name: 'text',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {
+                  x: sessionBlock.speaker.x,
+                  y: getSpeakerY(layout.y, layout.height, sessionBlock.speaker, speakers.length, index),
+                  class: 'speaker',
+                  style: speakerStyle,
+                },
+                children: [
+                  {
+                    name: '',
+                    type: 'text',
+                    value: speaker.zh.name,
+                    parent: null,
+                    attributes: {},
+                    children: [],
+                  },
+                ],
+              })),
             },
-          ],
-        })),
-      },
+          ]
+        : []),
+      ...(session.type && sessionBlock.sessionType?.show !== false
+        ? [
+            (() => {
+              const zhStyle = normalizeTextStyle(sessionBlock.sessionTypeZh.style)
+              const enStyle = normalizeTextStyle(sessionBlock.sessionTypeEn.style)
+              const zhFontSize = getFontSize(zhStyle, 14)
+              const enFontSize = getFontSize(enStyle, 10)
+              const zhLineHeight = getLineHeight(zhStyle)
+              const enLineHeight = getLineHeight(enStyle)
+              
+              const zhShow = sessionBlock.sessionTypeZh.show !== false
+              const enShow = sessionBlock.sessionTypeEn.show !== false
+              const typeGap = sessionBlock.sessionType?.gap ?? 18
+              const blockYOffset = sessionBlock.sessionType?.yOffset ?? 0
+              
+              const zhHeight = zhShow ? zhFontSize : 0
+              const enHeight = enShow ? enFontSize : 0
+              const effectiveGap = (zhShow && enShow) ? typeGap : 0
+              const blockHeight = zhHeight + effectiveGap + enHeight
+              
+              const zhTopY = 0
+              const enTopY = zhHeight + effectiveGap
+
+              return {
+                name: 'g',
+                type: 'element',
+                value: '',
+                parent: null,
+                attributes: {},
+                children: [
+                  ...(zhShow ? [{
+                    name: 'text',
+                    type: 'element',
+                    value: '',
+                    parent: null,
+                    attributes: {
+                      x: sessionBlock.sessionTypeZh.x,
+                      y: getTextLineY(layout.y, layout.height, blockHeight, zhTopY + blockYOffset, zhFontSize, zhLineHeight, 0),
+                      class: 'session-type',
+                      'text-anchor': 'middle',
+                      style: zhStyle,
+                    },
+                    children: [{
+                      name: '',
+                      type: 'text',
+                      value: sessionTypeData?.zh?.name || session.type,
+                      parent: null,
+                      attributes: {},
+                      children: [],
+                    }],
+                  }] : []),
+                  ...(enShow ? [{
+                    name: 'text',
+                    type: 'element',
+                    value: '',
+                    parent: null,
+                    attributes: {
+                      x: sessionBlock.sessionTypeEn.x,
+                      y: getTextLineY(layout.y, layout.height, blockHeight, enTopY + blockYOffset, enFontSize, enLineHeight, 0),
+                      class: 'session-type',
+                      'text-anchor': 'middle',
+                      style: enStyle,
+                    },
+                    children: [{
+                      name: '',
+                      type: 'text',
+                      value: sessionTypeData?.en?.name || session.type,
+                      parent: null,
+                      attributes: {},
+                      children: [],
+                    }],
+                  }] : []),
+                ]
+              }
+            })(),
+          ]
+        : []),
     ],
   }
 }
+
 
 function generateRoundedRectPath(x, y, w, h, rx, ry, corners) {
   const rTL = corners.includes('tl') ? rx : 0
@@ -247,20 +410,21 @@ function getSpeakerY(rowTop, rowHeight, speakerConfig, speakerCount, lineIndex =
     return rowTop + rowHeight / 2
   }
 
-  const { blockHeight, fontSize, dy } = getSpeakerMetrics(speakerConfig, speakerCount)
-  const blockTop = rowTop + (rowHeight - blockHeight) / 2
-  return blockTop + fontSize + dy * lineIndex
+  const { blockHeight, fontSize, gap } = getSpeakerMetrics(speakerConfig, speakerCount)
+  const blockYOffset = Number(speakerConfig.yOffset) || 0
+  const blockTop = rowTop + (rowHeight - blockHeight) / 2 + blockYOffset
+  return blockTop + fontSize + gap * lineIndex
 }
 
-export function getSessionLayout(session, speakerList, config, y) {
+export function getSessionLayout(session, schedule, config, y) {
+  const speakerList = schedule.speakers || []
   const speakers = session.speakers.map(speakerId => speakerList.find(s => s.id === speakerId)).filter(Boolean)
-  const baseHeight = Number(config.rowHeight) || 0
+  const baseHeight = config.autoRowHeight ? 0 : (Number(config.rowHeight) || 0)
   const speakerConfig = config.sessionBlock.speaker
   const sessionYPadding = getSessionVerticalPadding(config)
-  const yPadding = Number(speakerConfig.yPadding) || 0
   const { blockHeight } = getSpeakerMetrics(speakerConfig, speakers.length)
-  const speakerHeight = speakers.length > 0 ? blockHeight + yPadding * 2 : 0
-  const titleLayout = getTitleLayout(session, config)
+  const speakerHeight = (speakers.length > 0 && speakerConfig.show !== false) ? blockHeight : 0
+  const titleLayout = config.sessionBlock.showTitle !== false ? getTitleLayout(session, config) : { zhLines: [], enLines: [], blockHeight: 0, topY: 0, enTopY: 0, zhFontSize: 0, zhLineHeight: 0, enFontSize: 0, enLineHeight: 0 }
 
   return {
     y,
@@ -278,10 +442,17 @@ function getTitleLayout(session, config) {
   const enFontSize = getFontSize(sessionBlock.titleEn.style, enLineHeight)
   const zhLines = wrapTextWithPretext(session.zh.title, sessionBlock.titleZh.style, titleMaxWidth)
   const enLines = wrapTextWithPretext(session.en.title, sessionBlock.titleEn.style, titleMaxWidth)
-  const titleGap = Math.max((sessionBlock.titleEn.yOffset || 0) - (sessionBlock.titleZh.yOffset || 0), 0)
-  const zhBlockHeight = getTextBlockHeight(zhLines.length, zhLineHeight, zhFontSize)
-  const enBlockHeight = getTextBlockHeight(enLines.length, enLineHeight, enFontSize)
-  const blockHeight = zhBlockHeight + titleGap + enBlockHeight
+  const titleGap = sessionBlock.titleBlock?.gap ?? 18
+  const blockYOffset = sessionBlock.titleBlock?.yOffset ?? 0
+  const zhShow = sessionBlock.titleZh.show !== false
+  const enShow = sessionBlock.titleEn.show !== false
+  const zhBlockHeight = zhShow ? getTextBlockHeight(zhLines.length, zhLineHeight, zhFontSize) : 0
+  const enBlockHeight = enShow ? getTextBlockHeight(enLines.length, enLineHeight, enFontSize) : 0
+  const effectiveGap = (zhShow && enShow) ? titleGap : 0
+  const blockHeight = zhBlockHeight + effectiveGap + enBlockHeight
+
+  const zhTopY = 0
+  const enTopY = zhShow ? zhBlockHeight + titleGap : 0
 
   return {
     zhLines,
@@ -290,22 +461,44 @@ function getTitleLayout(session, config) {
     enLineHeight,
     zhFontSize,
     enFontSize,
-    topY: 0,
-    enTopY: zhBlockHeight + titleGap,
     blockHeight,
+    topY: zhTopY + blockYOffset,
+    enTopY: enTopY + blockYOffset,
   }
 }
 
 function getSpeakerMetrics(speakerConfig, speakerCount) {
   if (speakerCount === 0) {
-    return { blockHeight: 0, ascent: 0 }
+    return { blockHeight: 0, fontSize: 0, gap: 0 }
   }
 
-  const fontSize = getFontSize(speakerConfig.style, Number(speakerConfig.lineHeight) || Number(speakerConfig.dy) || 24)
-  const dy = Number(speakerConfig.dy) || Number(speakerConfig.lineHeight) || fontSize
-  const blockHeight = fontSize + dy * (speakerCount - 1)
+  const fontSize = getFontSize(speakerConfig.style, 14)
+  const gap = Number(speakerConfig.gap) || 24
+  const blockHeight = fontSize + gap * (speakerCount - 1)
 
-  return { blockHeight, fontSize, dy }
+  return { blockHeight, fontSize, gap }
+}
+
+function getQRCodePath(text) {
+  try {
+    const qrc = qrcode.create(text, { margin: 0 })
+    const size = qrc.modules.size
+    const data = qrc.modules.data
+    let path = ''
+    
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
+        if (data[row * size + col]) {
+          path += `M ${col} ${row} h 1 v 1 h -1 Z `
+        }
+      }
+    }
+    console.log('[QR Code] Generated path length:', path.length, 'Size:', size)
+    return { path, modulesSize: size }
+  } catch (e) {
+    console.error('[QR Code] error:', e)
+    return { path: '', modulesSize: 1 }
+  }
 }
 
 function getFontSize(style, fallback) {

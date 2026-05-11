@@ -14,8 +14,8 @@ const model = defineModel()
 </script>
 
 <template>
-  <input v-if="props.isNumber" type="number" :step="props.step" v-model.number="model" />
-  <input v-else type="text" v-model="model" />
+  <input v-if="props.isNumber" type="number" :step="props.step" v-model.number="model" v-bind="$attrs" />
+  <input v-else type="text" v-model="model" v-bind="$attrs" />
 </template>
 
 <style scoped>
@@ -40,5 +40,11 @@ textarea:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+input[type='number']:disabled,
+input[type='text']:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  color: #94a3b8;
 }
 </style>
