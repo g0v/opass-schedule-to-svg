@@ -23,13 +23,12 @@ npm install
 
 ### 2. 設定環境變數
 
-複製 `.env` 範例設定如下：
+`.env` 範例設定如下：
 
 ```ini
-GCP_API_KEY="Google Cloud API Key"
-SPREADSHEET_ID="Google Sheets ID"
-
-# 若未設定，將自動使用預設當前 Repo 議程表資料進行測試
+SPREADSHEET_ID="Google Sheets ID" # 若未設定，將自動使用預設當前 Repo 議程表資料進行測試
+DEFAULT_AVATAR=""
+AVATAR_BASE_URL=""
 ```
 
 ### 3. 執行生成
